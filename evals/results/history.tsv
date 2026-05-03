@@ -1,0 +1,2 @@
+timestamp	commit	total_score	hypothesis
+2026-05-03T05:41:35Z	645ed1b	0.875	Add concrete guardrail API examples with input_guardrail, output_guardrail, GuardrailFunctionOutput, and output_info.

@@ -1,0 +1,47 @@
+{
+  "tasks": {
+    "minimal_agent_runner": {
+      "prompt_file": "evals/tasks/minimal_agent_runner.md",
+      "skills": ["openai-agents-core"],
+      "expected_terms": ["Agent", "Runner", "run_sync", "Runner.run", "final_output", "RunConfig"],
+      "architecture_terms": ["tools", "context", "deterministic", "workflow"]
+    },
+    "context_tool": {
+      "prompt_file": "evals/tasks/context_tool.md",
+      "skills": ["openai-agents-tools", "openai-agents-core"],
+      "expected_terms": ["function_tool", "RunContextWrapper", "tools", "docstring", "typed"],
+      "architecture_terms": ["side effects", "structured", "context", "small"]
+    },
+    "structured_output": {
+      "prompt_file": "evals/tasks/structured_output.md",
+      "skills": ["openai-agents-structured-output"],
+      "expected_terms": ["output_type", "BaseModel", "Field", "final_output", "validate"],
+      "architecture_terms": ["schema", "Pydantic", "renderer", "deterministic"]
+    },
+    "custom_model": {
+      "prompt_file": "evals/tasks/custom_model.md",
+      "skills": ["openai-agents-models"],
+      "expected_terms": ["AsyncOpenAI", "OpenAIChatCompletionsModel", "ModelSettings", "RunConfig", "base_url", "set_tracing_disabled"],
+      "architecture_terms": ["centralize", "provider", "tool calling", "structured output"]
+    },
+    "handoff_routing": {
+      "prompt_file": "evals/tasks/handoff_routing.md",
+      "skills": ["openai-agents-handoffs"],
+      "expected_terms": ["handoffs", "Agent", "routing", "specialist", "tool"],
+      "architecture_terms": ["ownership", "tie-breaker", "domain", "tests"]
+    },
+    "guardrail_validation": {
+      "prompt_file": "evals/tasks/guardrail_validation.md",
+      "skills": ["openai-agents-guardrails"],
+      "expected_terms": ["input_guardrail", "output_guardrail", "GuardrailFunctionOutput", "tripwire", "output_info"],
+      "architecture_terms": ["deterministic", "policy", "validation", "negative tests"]
+    },
+    "sessions_tracing_streaming": {
+      "prompt_file": "evals/tasks/sessions_tracing_streaming.md",
+      "skills": ["openai-agents-sessions-tracing"],
+      "expected_terms": ["run_streamed", "stream_events", "session", "trace", "metadata"],
+      "architecture_terms": ["redact", "reproduce", "request ID", "debug"]
+    }
+  }
+}
+

@@ -35,7 +35,7 @@ Guardrails are validation gates around agent runs. Use them for safety policy, b
 
 ```python
 from pydantic import BaseModel
-from agents import Agent
+from agents import Agent, GuardrailFunctionOutput, Runner, RunContextWrapper, input_guardrail
 
 class SafetyCheck(BaseModel):
     allowed: bool
@@ -46,11 +46,57 @@ safety_agent = Agent(
     instructions="Classify whether the request is allowed. Return only the structured result.",
     output_type=SafetyCheck,
 )
+
+@input_guardrail
+async def safety_input_guardrail(
+    ctx: RunContextWrapper[None],
+    agent: Agent,
+    input: str,
+) -> GuardrailFunctionOutput:
+    result = await Runner.run(safety_agent, input, context=ctx.context)
+    return GuardrailFunctionOutput(
+        output_info=result.final_output,
+        tripwire_triggered=not result.final_output.allowed,
+    )
 ```
 
-Use this pattern as a focused classifier. Wire it through the SDK guardrail APIs supported by the current version, then test both pass and tripwire paths.
+Use this pattern as a focused classifier. Attach it with `input_guardrails=[safety_input_guardrail]`, then test both pass and tripwire paths.
 
 </example-shape>
+
+<output-guardrail-pattern>
+
+Output guardrails receive the typed final output. Use them when the agent can finish normally but the final artifact still needs a policy or quality gate.
+
+```python
+from pydantic import BaseModel
+from agents import Agent, GuardrailFunctionOutput, RunContextWrapper, output_guardrail
+
+class MessageOutput(BaseModel):
+    response: str
+
+@output_guardrail
+async def no_empty_response(
+    ctx: RunContextWrapper[None],
+    agent: Agent,
+    output: MessageOutput,
+) -> GuardrailFunctionOutput:
+    is_empty = not output.response.strip()
+    return GuardrailFunctionOutput(
+        output_info={"reason": "empty response" if is_empty else "ok"},
+        tripwire_triggered=is_empty,
+    )
+
+agent = Agent(
+    name="checked-agent",
+    instructions="Return a non-empty response.",
+    output_type=MessageOutput,
+    input_guardrails=[safety_input_guardrail],
+    output_guardrails=[no_empty_response],
+)
+```
+
+</output-guardrail-pattern>
 
 <output-validation-pattern>
 
@@ -78,4 +124,3 @@ If the same validation should block user-visible output, expose it as an output 
 | Output schema validation is skipped because a guardrail exists | Keep schema validation |
 
 </common-mistakes>
-

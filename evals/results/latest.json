@@ -1,0 +1,179 @@
+{
+  "category_scores": {
+    "api_correctness": 1.0,
+    "architecture_guidance": 1.0,
+    "conciseness_trigger_quality": 1.0,
+    "testability_debuggability": 0.265,
+    "tool_schema_boundary": 0.743
+  },
+  "generated_at": "2026-05-03T05:41:35.754108+00:00",
+  "hard_failures": [],
+  "skills": [
+    "openai-agents-core",
+    "openai-agents-guardrails",
+    "openai-agents-handoffs",
+    "openai-agents-models",
+    "openai-agents-sessions-tracing",
+    "openai-agents-structured-output",
+    "openai-agents-tools"
+  ],
+  "tasks": {
+    "context_tool": {
+      "api_score": 1.0,
+      "architecture_score": 1.0,
+      "missing_api_terms": [],
+      "missing_architecture_terms": [],
+      "missing_boundary_terms": [
+        "validate"
+      ],
+      "missing_testability_terms": [
+        "test",
+        "tests",
+        "validate",
+        "debug",
+        "trace",
+        "negative"
+      ],
+      "python_examples": 5,
+      "skills": [
+        "openai-agents-tools",
+        "openai-agents-core"
+      ],
+      "testability_score": 0.143,
+      "tool_schema_score": 0.8
+    },
+    "custom_model": {
+      "api_score": 1.0,
+      "architecture_score": 1.0,
+      "missing_api_terms": [],
+      "missing_architecture_terms": [],
+      "missing_boundary_terms": [
+        "schema",
+        "deterministic"
+      ],
+      "missing_testability_terms": [
+        "debug",
+        "trace",
+        "failure",
+        "negative"
+      ],
+      "python_examples": 4,
+      "skills": [
+        "openai-agents-models"
+      ],
+      "testability_score": 0.429,
+      "tool_schema_score": 0.6
+    },
+    "guardrail_validation": {
+      "api_score": 1.0,
+      "architecture_score": 1.0,
+      "missing_api_terms": [],
+      "missing_architecture_terms": [],
+      "missing_boundary_terms": [],
+      "missing_testability_terms": [
+        "debug",
+        "trace"
+      ],
+      "python_examples": 3,
+      "skills": [
+        "openai-agents-guardrails"
+      ],
+      "testability_score": 0.714,
+      "tool_schema_score": 1.0
+    },
+    "handoff_routing": {
+      "api_score": 1.0,
+      "architecture_score": 1.0,
+      "missing_api_terms": [],
+      "missing_architecture_terms": [],
+      "missing_boundary_terms": [
+        "schema",
+        "validate"
+      ],
+      "missing_testability_terms": [
+        "test",
+        "validate",
+        "debug",
+        "trace",
+        "failure",
+        "negative"
+      ],
+      "python_examples": 1,
+      "skills": [
+        "openai-agents-handoffs"
+      ],
+      "testability_score": 0.143,
+      "tool_schema_score": 0.6
+    },
+    "minimal_agent_runner": {
+      "api_score": 1.0,
+      "architecture_score": 1.0,
+      "missing_api_terms": [],
+      "missing_architecture_terms": [],
+      "missing_boundary_terms": [
+        "schema",
+        "validate"
+      ],
+      "missing_testability_terms": [
+        "test",
+        "tests",
+        "validate",
+        "debug",
+        "trace",
+        "failure",
+        "negative"
+      ],
+      "python_examples": 3,
+      "skills": [
+        "openai-agents-core"
+      ],
+      "testability_score": 0.0,
+      "tool_schema_score": 0.6
+    },
+    "sessions_tracing_streaming": {
+      "api_score": 1.0,
+      "architecture_score": 1.0,
+      "missing_api_terms": [],
+      "missing_architecture_terms": [],
+      "missing_boundary_terms": [
+        "schema",
+        "validate"
+      ],
+      "missing_testability_terms": [
+        "test",
+        "tests",
+        "validate",
+        "failure",
+        "negative"
+      ],
+      "python_examples": 1,
+      "skills": [
+        "openai-agents-sessions-tracing"
+      ],
+      "testability_score": 0.286,
+      "tool_schema_score": 0.6
+    },
+    "structured_output": {
+      "api_score": 1.0,
+      "architecture_score": 1.0,
+      "missing_api_terms": [],
+      "missing_architecture_terms": [],
+      "missing_boundary_terms": [],
+      "missing_testability_terms": [
+        "test",
+        "tests",
+        "debug",
+        "trace",
+        "failure",
+        "negative"
+      ],
+      "python_examples": 3,
+      "skills": [
+        "openai-agents-structured-output"
+      ],
+      "testability_score": 0.143,
+      "tool_schema_score": 1.0
+    }
+  },
+  "total_score": 0.875
+}

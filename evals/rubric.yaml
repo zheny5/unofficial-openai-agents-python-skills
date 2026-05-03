@@ -1,0 +1,18 @@
+{
+  "weights": {
+    "api_correctness": 0.40,
+    "architecture_guidance": 0.20,
+    "tool_schema_boundary": 0.20,
+    "testability_debuggability": 0.10,
+    "conciseness_trigger_quality": 0.10
+  },
+  "hard_failure_patterns": [
+    "from agents import AsyncOpenAI",
+    "output_type=dict",
+    "return JSON in prose",
+    "put API key in instructions"
+  ],
+  "max_skill_lines": 180,
+  "min_skill_lines": 45
+}
+
