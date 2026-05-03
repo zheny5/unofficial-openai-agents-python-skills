@@ -105,6 +105,51 @@ agent = Agent(
 
 </model-settings-pattern>
 
+<custom-provider-pattern>
+
+Use a `ModelProvider` when provider selection belongs in `RunConfig`, not one fixed agent.
+
+```python
+from openai import AsyncOpenAI
+from agents import Model, ModelProvider, OpenAIChatCompletionsModel, RunConfig, Runner
+
+client = AsyncOpenAI(
+    api_key="YOUR_PROVIDER_API_KEY",
+    base_url="https://your-openai-compatible-endpoint/v1",
+)
+
+class CustomModelProvider(ModelProvider):
+    def get_model(self, model_name: str | None) -> Model:
+        return OpenAIChatCompletionsModel(
+            model=model_name or "your-model-name",
+            openai_client=client,
+        )
+
+result = await Runner.run(
+    agent,
+    "Run a provider smoke test.",
+    run_config=RunConfig(model_provider=CustomModelProvider()),
+)
+```
+
+</custom-provider-pattern>
+
+<model-testing-debugging-pattern>
+
+Treat each non-default provider as a dependency with explicit smoke tests.
+
+| Scenario | Check |
+| --- | --- |
+| Tool-calling smoke test | A tiny `@function_tool` is called with typed arguments |
+| Structured-output schema test | `output_type` returns a typed object, not raw JSON text |
+| Negative capability test | Unsupported tools or schemas fail with a clear error |
+| Provider failure debug | Log base URL, model name, request ID, and sanitized error category |
+| Tracing behavior | Disable tracing or set a tracing export key when not using an OpenAI platform key |
+
+Keep retries, latency budgets, fallback model selection, schema validation, and deterministic repair outside prompts.
+
+</model-testing-debugging-pattern>
+
 <model-readiness-checklist>
 
 - Tool calling works for your target model.
@@ -125,5 +170,7 @@ agent = Agent(
 | Using prompts to compensate for unsupported structured output | Use a compatible model or validate/repair deterministically |
 | Mixing provider auth into agent instructions | Keep credentials in environment/config only |
 | Migrating model strings without checking behavior | Re-run tool, structured output, and guardrail tests |
+| Debug logs expose provider secrets | Log sanitized base URL/model/request IDs, never API keys |
+| Fallback silently changes capabilities | Test fallback models against the same tool and schema requirements |
 
 </common-mistakes>

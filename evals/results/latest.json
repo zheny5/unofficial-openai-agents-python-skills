@@ -3,10 +3,10 @@
     "api_correctness": 1.0,
     "architecture_guidance": 1.0,
     "conciseness_trigger_quality": 1.0,
-    "testability_debuggability": 0.776,
-    "tool_schema_boundary": 0.8
+    "testability_debuggability": 0.837,
+    "tool_schema_boundary": 0.857
   },
-  "generated_at": "2026-05-03T06:15:41.355260+00:00",
+  "generated_at": "2026-05-03T06:22:03.306932+00:00",
   "hard_failures": [],
   "skills": [
     "openai-agents-core",
@@ -79,22 +79,16 @@
       "architecture_score": 1.0,
       "missing_api_terms": [],
       "missing_architecture_terms": [],
-      "missing_boundary_terms": [
-        "schema",
-        "deterministic"
-      ],
+      "missing_boundary_terms": [],
       "missing_testability_terms": [
-        "debug",
-        "trace",
-        "failure",
-        "negative"
+        "trace"
       ],
-      "python_examples": 4,
+      "python_examples": 5,
       "skills": [
         "openai-agents-models"
       ],
-      "testability_score": 0.429,
-      "tool_schema_score": 0.6
+      "testability_score": 0.857,
+      "tool_schema_score": 1.0
     },
     "guardrail_validation": {
       "api_score": 1.0,
@@ -182,5 +176,5 @@
       "tool_schema_score": 1.0
     }
   },
-  "total_score": 0.938
+  "total_score": 0.955
 }
