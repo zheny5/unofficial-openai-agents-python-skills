@@ -1,3 +1,4 @@
 timestamp	commit	total_score	hypothesis
 2026-05-03T05:41:35Z	645ed1b	0.875	Add concrete guardrail API examples with input_guardrail, output_guardrail, GuardrailFunctionOutput, and output_info.
 2026-05-03T05:57:36Z	b3b6424	0.893	Add testable runner wrapper and debug-context guidance to openai-agents-core.
+2026-05-03T06:01:50Z	1730eb1	0.911	Add positive, near-miss, failure, trace, and validation guidance to openai-agents-handoffs.
