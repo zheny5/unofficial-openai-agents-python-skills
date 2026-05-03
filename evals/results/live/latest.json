@@ -1,15 +1,23 @@
 {
   "agent": "claude",
   "dry_run": false,
-  "generated_at": "2026-05-03T06:33:44.964257+00:00",
+  "generated_at": "2026-05-03T07:04:46.242966+00:00",
   "results": [
     {
       "dry_run": false,
-      "output": "```python\nfrom pydantic import BaseModel\nfrom agents import Agent, Runner, function_tool\n\n\nclass CityInfo(BaseModel):\n    city: str\n    population: int\n\n\n@function_tool\ndef lookup_population(city: str) -> int:\n    \"\"\"Return the population for a given city.\"\"\"\n    populations = {\"tokyo\": 13_960_000, \"london\": 8_982_000}\n    return populations.get(city.lower(), 0)\n\n\nagent = Agent(\n    name=\"city_agent\",\n    instructions=\"Look up the population for the requested city. Return the result using the tool only.\",\n    tools=[lookup_population],\n    output_type=CityInfo,\n)\n\n\nasync def get_city_info(city: str) -> CityInfo:\n    result = await Runner.run(agent, f\"What is the population of {city}?\")\n    return result.final_output\n\n\n# --- test ---\n\nimport pytest\n\n@pytest.mark.asyncio\nasync def test_get_city_info(monkeypatch):\n    async def fake_run(agent_ref, input, **kwargs):\n        class FakeResult:\n            final_output = CityInfo(city=\"Tokyo\", population=13_960_000)\n        return FakeResult()\n\n    monkeypatch.setattr(Runner, \"run\", fake_run)\n    info = await get_city_info(\"Tokyo\")\n    assert isinstance(info, CityInfo)\n    assert info.city == \"Tokyo\"\n    assert info.population == 13_960_000\n```\n\nKey points:\n\n- **Side effects in the tool** \u2014 `lookup_population` is the only place data is fetched; the prompt never asks the model to \"return JSON\".\n- **`output_type=CityInfo`** \u2014 the SDK enforces structured output via the model's structured output mode, so `final_output` is a `CityInfo` instance, not a raw string to parse.\n- **`Runner.run`** is the async entry point; `final_output` is already typed.\n- **Test** monkeypatches `Runner.run` to avoid hitting the API, verifying the wiring from `get_city_info` through to the typed output.",
+      "output": "```python\nfrom __future__ import annotations\n\nimport pytest\nfrom pydantic import BaseModel\nfrom agents import Agent, Runner, function_tool\n\n\n# --- Structured output model ---\n\nclass CityInfo(BaseModel):\n    city: str\n    population: int\n    summary: str\n\n\n# --- Tool ---\n\n@function_tool\ndef lookup_population(city: str) -> int:\n    \"\"\"Return the population for a known city.\"\"\"\n    populations = {\"tokyo\": 13_960_000, \"london\": 8_982_000}\n    return populations.get(city.lower(), 1_000_000)\n\n\n# --- Agent ---\n\nagent = Agent(\n    name=\"city_agent\",\n    instructions=\"Look up the population of the requested city and provide a brief summary.\",\n    tools=[lookup_population],\n    output_type=CityInfo,\n)\n\n\n# --- Runner ---\n\nasync def get_city_info(city: str) -> CityInfo:\n    result = await Runner.run(agent, f\"Tell me about {city}\")\n    return result.final_output\n\n\n# --- Test ---\n\n@pytest.mark.asyncio\nasync def test_get_city_info(monkeypatch):\n    async def fake_run(_agent, _input, **kwargs):\n        class FakeResult:\n            final_output = CityInfo(city=\"Tokyo\", population=13_960_000, summary=\"Japan's capital.\")\n        return FakeResult()\n\n    monkeypatch.setattr(Runner, \"run\", fake_run)\n    info = await get_city_info(\"Tokyo\")\n    assert isinstance(info, CityInfo)\n    assert info.city == \"Tokyo\"\n    assert info.population == 13_960_000\n```\n\nKey design points:\n\n- **`output_type=CityInfo`** tells the SDK to parse the LLM response directly into a Pydantic model \u2014 no manual JSON parsing from strings.\n- **`@function_tool`** encapsulates the side-effect (population lookup) inside a tool, not in the prompt.\n- **`result.final_output`** is already a typed `CityInfo` instance when `output_type` is set.\n- The test monkeypatches `Runner.run` so it runs without an API key, returning a stub result with the correct typed `final_output`.",
       "returncode": 0,
       "score": {
         "architecture_score": 0.75,
         "banned_patterns_found": [],
+        "code_quality": {
+          "agents_imports": 1,
+          "banned_imports": [],
+          "code_blocks": 1,
+          "code_quality_score": 1.0,
+          "parse_errors": []
+        },
+        "combined_score": 0.93,
         "expected_score": 1.0,
         "missing_architecture_terms": [
           "validate"

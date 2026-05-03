@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
+import re
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -93,6 +95,59 @@ def contains(text: str, pattern: str) -> bool:
     return pattern.lower() in text.lower()
 
 
+def extract_python_blocks(text: str) -> list[str]:
+    blocks: list[str] = []
+    for match in re.finditer(r"```(?:python|py)\s*\n(.*?)```", text, re.IGNORECASE | re.DOTALL):
+        blocks.append(match.group(1).strip())
+    return blocks
+
+
+def code_quality(text: str) -> dict[str, Any]:
+    blocks = extract_python_blocks(text)
+    parse_errors: list[dict[str, Any]] = []
+    agents_imports = 0
+    banned_imports: list[str] = []
+
+    for index, block in enumerate(blocks, start=1):
+        try:
+            tree = ast.parse(block)
+        except SyntaxError as exc:
+            parse_errors.append(
+                {
+                    "block": index,
+                    "line": exc.lineno,
+                    "message": exc.msg,
+                }
+            )
+            continue
+
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if node.module == "agents":
+                agents_imports += 1
+                for alias in node.names:
+                    if alias.name == "AsyncOpenAI":
+                        banned_imports.append("from agents import AsyncOpenAI")
+
+    if not blocks:
+        score = 0.0
+    elif parse_errors:
+        score = 0.4
+    elif banned_imports:
+        score = 0.6
+    else:
+        score = 1.0
+
+    return {
+        "code_blocks": len(blocks),
+        "parse_errors": parse_errors,
+        "agents_imports": agents_imports,
+        "banned_imports": banned_imports,
+        "code_quality_score": score,
+    }
+
+
 def score_output(task: LiveTask, text: str) -> dict[str, Any]:
     missing_expected = [term for term in task.expected_terms if not contains(text, term)]
     missing_architecture = [term for term in task.architecture_terms if not contains(text, term)]
@@ -105,13 +160,17 @@ def score_output(task: LiveTask, text: str) -> dict[str, Any]:
     )
     banned_penalty = min(len(banned_found) * 0.25, 1.0)
     total = max((expected_score * 0.6) + (architecture_score * 0.4) - banned_penalty, 0.0)
+    code = code_quality(text)
+    combined = max((total * 0.7) + (code["code_quality_score"] * 0.3), 0.0)
     return {
         "score": round(total, 3),
+        "combined_score": round(combined, 3),
         "expected_score": round(expected_score, 3),
         "architecture_score": round(architecture_score, 3),
         "missing_expected_terms": missing_expected,
         "missing_architecture_terms": missing_architecture,
         "banned_patterns_found": banned_found,
+        "code_quality": code,
     }
 
 
@@ -165,8 +224,10 @@ def render_markdown(report: dict[str, Any]) -> str:
             continue
         score = result["score"]
         lines.append(
-            f"- `{result['task']}`: score `{score['score']}`, returncode `{result['returncode']}`"
+            f"- `{result['task']}`: combined `{score['combined_score']}`, text `{score['score']}`, "
+            f"code `{score['code_quality']['code_quality_score']}`, returncode `{result['returncode']}`"
         )
+        lines.append(f"  Python code blocks: {score['code_quality']['code_blocks']}")
         if score["missing_expected_terms"]:
             lines.append(f"  Missing expected: {', '.join(score['missing_expected_terms'])}")
         if score["missing_architecture_terms"]:
@@ -175,6 +236,10 @@ def render_markdown(report: dict[str, Any]) -> str:
             )
         if score["banned_patterns_found"]:
             lines.append(f"  Banned patterns: {', '.join(score['banned_patterns_found'])}")
+        if score["code_quality"]["parse_errors"]:
+            lines.append(f"  Parse errors: {json.dumps(score['code_quality']['parse_errors'])}")
+        if score["code_quality"]["banned_imports"]:
+            lines.append(f"  Banned imports: {', '.join(score['code_quality']['banned_imports'])}")
     lines.append("")
     return "\n".join(lines)
 

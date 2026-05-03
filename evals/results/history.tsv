@@ -6,3 +6,4 @@ timestamp	commit	total_score	hypothesis
 2026-05-03T06:15:41Z	e16c1b3	0.938	Add source-backed session, streaming, trace, and failure reproduction test guidance.
 2026-05-03T06:22:03Z	1f44007	0.955	Add source-backed custom model provider and capability smoke-test guidance.
 2026-05-03T06:33:44Z	4d9afe4	0.955	Add optional Claude live forward-test harness; first task scored 0.9.
+2026-05-03T07:04:46Z	01c7ef1	0.955	Add Python code block extraction and AST parse scoring to live eval; first task combined score 0.93.
