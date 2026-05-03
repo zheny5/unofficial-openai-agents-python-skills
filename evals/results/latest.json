@@ -3,10 +3,10 @@
     "api_correctness": 1.0,
     "architecture_guidance": 1.0,
     "conciseness_trigger_quality": 1.0,
-    "testability_debuggability": 0.265,
+    "testability_debuggability": 0.449,
     "tool_schema_boundary": 0.743
   },
-  "generated_at": "2026-05-03T05:41:35.754108+00:00",
+  "generated_at": "2026-05-03T05:57:36.278025+00:00",
   "hard_failures": [],
   "skills": [
     "openai-agents-core",
@@ -27,19 +27,15 @@
         "validate"
       ],
       "missing_testability_terms": [
-        "test",
-        "tests",
         "validate",
-        "debug",
-        "trace",
         "negative"
       ],
-      "python_examples": 5,
+      "python_examples": 6,
       "skills": [
         "openai-agents-tools",
         "openai-agents-core"
       ],
-      "testability_score": 0.143,
+      "testability_score": 0.714,
       "tool_schema_score": 0.8
     },
     "custom_model": {
@@ -115,19 +111,14 @@
         "validate"
       ],
       "missing_testability_terms": [
-        "test",
-        "tests",
         "validate",
-        "debug",
-        "trace",
-        "failure",
         "negative"
       ],
-      "python_examples": 3,
+      "python_examples": 4,
       "skills": [
         "openai-agents-core"
       ],
-      "testability_score": 0.0,
+      "testability_score": 0.714,
       "tool_schema_score": 0.6
     },
     "sessions_tracing_streaming": {
@@ -175,5 +166,5 @@
       "tool_schema_score": 1.0
     }
   },
-  "total_score": 0.875
+  "total_score": 0.893
 }

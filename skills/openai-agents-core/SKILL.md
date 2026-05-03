@@ -95,6 +95,43 @@ result = Runner.run_sync(
 
 </context-pattern>
 
+<testing-debugging-pattern>
+
+Wrap runner calls in small functions so tests can assert behavior without duplicating agent setup. Preserve enough debug context to reproduce failures, but keep secrets and full private documents out of logs.
+
+```python
+from agents import Agent, Runner, RunConfig
+
+agent = Agent(
+    name="assistant",
+    instructions="Answer concisely. Use tools only when needed.",
+)
+
+def answer_once(prompt: str, *, model: str = "gpt-4.1-mini") -> str:
+    result = Runner.run_sync(
+        agent,
+        prompt,
+        run_config=RunConfig(model=model),
+    )
+    return result.final_output
+
+def test_answer_once_smoke() -> None:
+    output = answer_once("Say hello in three words or fewer.")
+    assert isinstance(output, str)
+    assert output.strip()
+```
+
+| Scenario | Check |
+| --- | --- |
+| Minimal successful run | Test the wrapper returns non-empty `final_output` |
+| Tool-free smoke test | Use a prompt that should not require IO or side effects |
+| Expected failure/debug case | Preserve request ID, model, prompt version, and input reference |
+| Async entrypoint | Test `await Runner.run(...)` instead of calling `run_sync` inside async code |
+
+For failed runs, inspect trace/debug output and generated items before changing prompts. Do not hide retries, validation, or failure handling in agent instructions.
+
+</testing-debugging-pattern>
+
 <common-mistakes>
 
 | Mistake | Fix |
@@ -104,10 +141,11 @@ result = Runner.run_sync(
 | Using `run_sync` in an async web route | Use `await Runner.run(...)` |
 | Treating `final_output` as validated JSON | Use `output_type` and Pydantic for structured outputs |
 | Letting one giant agent do every job | Split deterministic steps into Python functions; use handoffs only for real specialization |
+| Debugging only from final text | Inspect traces, generated items, and validation failure context |
+| Tests call raw `Runner.run_sync` everywhere | Wrap runs in app functions and test those boundaries |
 
 </common-mistakes>
 
 <design-rule>
 For production workflows, design the outer workflow first, then insert agent steps where language reasoning is actually needed.
 </design-rule>
-
