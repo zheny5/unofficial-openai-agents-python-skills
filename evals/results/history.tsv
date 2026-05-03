@@ -5,3 +5,4 @@ timestamp	commit	total_score	hypothesis
 2026-05-03T06:09:09Z	88d1c9a	0.922	Add source map coverage and structured-output validation test guidance.
 2026-05-03T06:15:41Z	e16c1b3	0.938	Add source-backed session, streaming, trace, and failure reproduction test guidance.
 2026-05-03T06:22:03Z	1f44007	0.955	Add source-backed custom model provider and capability smoke-test guidance.
+2026-05-03T06:33:44Z	4d9afe4	0.955	Add optional Claude live forward-test harness; first task scored 0.9.

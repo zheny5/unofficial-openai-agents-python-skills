@@ -1,0 +1,12 @@
+# Live Task: Minimal Agent + Tool + Structured Output
+
+Write a small OpenAI Agents SDK Python module that defines:
+
+- one `Agent`
+- one `@function_tool`
+- one Pydantic output model via `output_type`
+- an async function that calls the agent and returns the typed `final_output`
+- one minimal pytest-style test or test scenario
+
+Keep side effects inside tools, not prompts. Do not parse JSON from a string response.
+

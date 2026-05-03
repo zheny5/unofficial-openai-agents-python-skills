@@ -1,0 +1,24 @@
+{
+  "agent": "claude",
+  "dry_run": false,
+  "generated_at": "2026-05-03T06:33:44.964257+00:00",
+  "results": [
+    {
+      "dry_run": false,
+      "output": "```python\nfrom pydantic import BaseModel\nfrom agents import Agent, Runner, function_tool\n\n\nclass CityInfo(BaseModel):\n    city: str\n    population: int\n\n\n@function_tool\ndef lookup_population(city: str) -> int:\n    \"\"\"Return the population for a given city.\"\"\"\n    populations = {\"tokyo\": 13_960_000, \"london\": 8_982_000}\n    return populations.get(city.lower(), 0)\n\n\nagent = Agent(\n    name=\"city_agent\",\n    instructions=\"Look up the population for the requested city. Return the result using the tool only.\",\n    tools=[lookup_population],\n    output_type=CityInfo,\n)\n\n\nasync def get_city_info(city: str) -> CityInfo:\n    result = await Runner.run(agent, f\"What is the population of {city}?\")\n    return result.final_output\n\n\n# --- test ---\n\nimport pytest\n\n@pytest.mark.asyncio\nasync def test_get_city_info(monkeypatch):\n    async def fake_run(agent_ref, input, **kwargs):\n        class FakeResult:\n            final_output = CityInfo(city=\"Tokyo\", population=13_960_000)\n        return FakeResult()\n\n    monkeypatch.setattr(Runner, \"run\", fake_run)\n    info = await get_city_info(\"Tokyo\")\n    assert isinstance(info, CityInfo)\n    assert info.city == \"Tokyo\"\n    assert info.population == 13_960_000\n```\n\nKey points:\n\n- **Side effects in the tool** \u2014 `lookup_population` is the only place data is fetched; the prompt never asks the model to \"return JSON\".\n- **`output_type=CityInfo`** \u2014 the SDK enforces structured output via the model's structured output mode, so `final_output` is a `CityInfo` instance, not a raw string to parse.\n- **`Runner.run`** is the async entry point; `final_output` is already typed.\n- **Test** monkeypatches `Runner.run` to avoid hitting the API, verifying the wiring from `get_city_info` through to the typed output.",
+      "returncode": 0,
+      "score": {
+        "architecture_score": 0.75,
+        "banned_patterns_found": [],
+        "expected_score": 1.0,
+        "missing_architecture_terms": [
+          "validate"
+        ],
+        "missing_expected_terms": [],
+        "score": 0.9
+      },
+      "stderr": "",
+      "task": "minimal_agent_tool_output"
+    }
+  ]
+}

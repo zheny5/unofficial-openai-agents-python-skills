@@ -1,0 +1,23 @@
+{
+  "tasks": {
+    "minimal_agent_tool_output": {
+      "prompt_file": "evals/live_tasks/minimal_agent_tool_output.md",
+      "expected_terms": ["Agent", "Runner.run", "function_tool", "BaseModel", "output_type", "final_output"],
+      "architecture_terms": ["tool", "typed", "validate", "test"],
+      "banned_patterns": ["from agents import AsyncOpenAI", "json.loads(result.final_output)", "API key in instructions"]
+    },
+    "custom_model_provider": {
+      "prompt_file": "evals/live_tasks/custom_model_provider.md",
+      "expected_terms": ["AsyncOpenAI", "OpenAIChatCompletionsModel", "ModelProvider", "RunConfig", "model_provider", "set_tracing_disabled"],
+      "architecture_terms": ["tool-calling smoke test", "structured-output", "fallback", "sanitized"],
+      "banned_patterns": ["from agents import AsyncOpenAI", "api_key=\"sk-", "put API key in instructions"]
+    },
+    "sessions_tracing_streaming": {
+      "prompt_file": "evals/live_tasks/sessions_tracing_streaming.md",
+      "expected_terms": ["Runner.run_streamed", "stream_events", "SQLiteSession", "trace", "group_id", "session="],
+      "architecture_terms": ["secret", "request ID", "final", "failure"],
+      "banned_patterns": ["parse partial text as JSON", "trace API key", "raw private document"]
+    }
+  }
+}
+
