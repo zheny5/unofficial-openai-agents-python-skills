@@ -3,3 +3,4 @@ timestamp	commit	total_score	hypothesis
 2026-05-03T05:57:36Z	b3b6424	0.893	Add testable runner wrapper and debug-context guidance to openai-agents-core.
 2026-05-03T06:01:50Z	1730eb1	0.911	Add positive, near-miss, failure, trace, and validation guidance to openai-agents-handoffs.
 2026-05-03T06:09:09Z	88d1c9a	0.922	Add source map coverage and structured-output validation test guidance.
+2026-05-03T06:15:41Z	e16c1b3	0.938	Add source-backed session, streaming, trace, and failure reproduction test guidance.
