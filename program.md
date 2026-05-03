@@ -23,5 +23,6 @@ Use this loop to improve the OpenAI Agents Python skills without relying on subj
    - the edited skill remains concise and task-focused.
 7. Record notable experiments in `evals/results/history.tsv` when committing a successful iteration.
 
-Do not optimize for evaluator terms by stuffing keywords. Add accurate, useful guidance that would help a coding agent write better OpenAI Agents SDK Python code.
+Before changing SDK API examples, inspect `references/source-map.md` and confirm the symbol or call shape against the official source checkout or docs. Engineering-only guidance can use the current eval report, but new imports, decorators, model wrappers, guardrail signatures, or output schema patterns require source confirmation.
 
+Do not optimize for evaluator terms by stuffing keywords. Add accurate, useful guidance that would help a coding agent write better OpenAI Agents SDK Python code.

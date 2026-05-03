@@ -3,10 +3,10 @@
     "api_correctness": 1.0,
     "architecture_guidance": 1.0,
     "conciseness_trigger_quality": 1.0,
-    "testability_debuggability": 0.571,
+    "testability_debuggability": 0.673,
     "tool_schema_boundary": 0.771
   },
-  "generated_at": "2026-05-03T06:01:50.346740+00:00",
+  "generated_at": "2026-05-03T06:09:09.716311+00:00",
   "hard_failures": [],
   "skills": [
     "openai-agents-core",
@@ -17,6 +17,42 @@
     "openai-agents-structured-output",
     "openai-agents-tools"
   ],
+  "source_coverage": {
+    "enabled": true,
+    "skills": {
+      "openai-agents-core": {
+        "mapped": true,
+        "missing_paths": []
+      },
+      "openai-agents-guardrails": {
+        "mapped": true,
+        "missing_paths": []
+      },
+      "openai-agents-handoffs": {
+        "mapped": true,
+        "missing_paths": []
+      },
+      "openai-agents-models": {
+        "mapped": true,
+        "missing_paths": []
+      },
+      "openai-agents-sessions-tracing": {
+        "mapped": true,
+        "missing_paths": []
+      },
+      "openai-agents-structured-output": {
+        "mapped": true,
+        "missing_paths": []
+      },
+      "openai-agents-tools": {
+        "mapped": true,
+        "missing_paths": []
+      }
+    },
+    "source_checkout_exists": true,
+    "source_map_exists": true,
+    "warnings": []
+  },
   "tasks": {
     "context_tool": {
       "api_score": 1.0,
@@ -143,20 +179,15 @@
       "missing_architecture_terms": [],
       "missing_boundary_terms": [],
       "missing_testability_terms": [
-        "test",
-        "tests",
-        "debug",
-        "trace",
-        "failure",
-        "negative"
+        "trace"
       ],
-      "python_examples": 3,
+      "python_examples": 4,
       "skills": [
         "openai-agents-structured-output"
       ],
-      "testability_score": 0.143,
+      "testability_score": 0.857,
       "tool_schema_score": 1.0
     }
   },
-  "total_score": 0.911
+  "total_score": 0.922
 }

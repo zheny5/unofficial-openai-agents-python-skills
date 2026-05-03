@@ -1,0 +1,14 @@
+{
+  "source_checkout": "/home/yuzheng/projects/openai-agents-python",
+  "source_map": "references/source-map.md",
+  "skills": {
+    "openai-agents-core": ["examples/basic/hello_world.py", "src/agents/result.py"],
+    "openai-agents-tools": ["examples/basic/tools.py", "src/agents/tool.py"],
+    "openai-agents-models": ["examples/model_providers/custom_example_agent.py"],
+    "openai-agents-structured-output": ["examples/research_bot/agents/planner_agent.py", "examples/basic/non_strict_output_type.py", "src/agents/agent_output.py"],
+    "openai-agents-handoffs": ["examples/agent_patterns/routing.py", "examples/handoffs/message_filter.py"],
+    "openai-agents-guardrails": ["examples/agent_patterns/input_guardrails.py", "examples/agent_patterns/output_guardrails.py", "tests/test_guardrails.py"],
+    "openai-agents-sessions-tracing": ["examples/basic/stream_text.py", "examples/memory/sqlite_session_example.py"]
+  }
+}
+

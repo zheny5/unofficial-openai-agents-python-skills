@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = ROOT / "skills"
 RUBRIC_PATH = ROOT / "evals" / "rubric.yaml"
 TERMS_PATH = ROOT / "evals" / "fixtures" / "expected_terms.yaml"
+SOURCE_TERMS_PATH = ROOT / "evals" / "fixtures" / "source_terms.yaml"
 RESULTS_DIR = ROOT / "evals" / "results"
 
 
@@ -185,11 +186,52 @@ def score_eval() -> tuple[dict[str, Any], int]:
         "total_score": round(total, 3),
         "category_scores": {key: round(value, 3) for key, value in category_scores.items()},
         "hard_failures": hard_failures,
+        "source_coverage": source_coverage(skills),
         "skills": sorted(skills.keys()),
         "tasks": task_results,
     }
     exit_code = 1 if hard_failures else 0
     return report, exit_code
+
+
+def source_coverage(skills: dict[str, Skill]) -> dict[str, Any]:
+    if not SOURCE_TERMS_PATH.exists():
+        return {"enabled": False, "warnings": ["missing evals/fixtures/source_terms.yaml"]}
+
+    config = load_json_yaml(SOURCE_TERMS_PATH)
+    source_map_path = ROOT / config["source_map"]
+    checkout = Path(config["source_checkout"])
+    warnings: list[str] = []
+    mapped_skills: dict[str, Any] = {}
+
+    if not source_map_path.exists():
+        warnings.append(f"missing {source_map_path.relative_to(ROOT)}")
+    if not checkout.exists():
+        warnings.append(f"missing source checkout {checkout}")
+
+    source_map_text = source_map_path.read_text() if source_map_path.exists() else ""
+    for skill_name, paths in config["skills"].items():
+        missing_paths = [path for path in paths if not (checkout / path).exists()]
+        if skill_name not in skills:
+            warnings.append(f"source map references unknown skill {skill_name}")
+        if skill_name not in source_map_text:
+            warnings.append(f"{skill_name} missing from source map")
+        mapped_skills[skill_name] = {
+            "mapped": skill_name in skills and skill_name in source_map_text,
+            "missing_paths": missing_paths,
+        }
+
+    unmapped = sorted(set(skills) - set(config["skills"]))
+    if unmapped:
+        warnings.append(f"skills missing source entries: {', '.join(unmapped)}")
+
+    return {
+        "enabled": True,
+        "source_checkout_exists": checkout.exists(),
+        "source_map_exists": source_map_path.exists(),
+        "warnings": warnings,
+        "skills": mapped_skills,
+    }
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -209,6 +251,18 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(f"- {failure}" for failure in report["hard_failures"])
     else:
         lines.append("- None")
+    source = report.get("source_coverage", {})
+    lines.extend(["", "## Source Coverage", ""])
+    if not source.get("enabled"):
+        lines.append("- Disabled")
+    else:
+        lines.append(f"- Source checkout exists: `{source['source_checkout_exists']}`")
+        lines.append(f"- Source map exists: `{source['source_map_exists']}`")
+        warnings = source.get("warnings", [])
+        if warnings:
+            lines.extend(f"- Warning: {warning}" for warning in warnings)
+        else:
+            lines.append("- Warnings: none")
     lines.extend(["", "## Task Findings", ""])
     for task_name, result in report["tasks"].items():
         missing = result["missing_api_terms"] + result["missing_architecture_terms"]
@@ -242,4 +296,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

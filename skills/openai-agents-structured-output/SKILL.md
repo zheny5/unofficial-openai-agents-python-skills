@@ -82,6 +82,44 @@ render_pptx(deck, output_path="deck.pptx")
 
 </artifact-pipeline>
 
+<testing-debugging-pattern>
+
+Test structured output at the typed boundary. The SDK validates model JSON into the declared `output_type`; downstream code should validate business constraints before rendering or API calls.
+
+```python
+from pydantic import BaseModel, Field
+
+class SlideSpec(BaseModel):
+    title: str
+    bullets: list[str] = Field(min_length=1, max_length=6)
+
+class DeckSpec(BaseModel):
+    title: str
+    slides: list[SlideSpec] = Field(min_length=1)
+
+def validate_deck(deck: DeckSpec) -> list[str]:
+    errors: list[str] = []
+    for index, slide in enumerate(deck.slides, start=1):
+        if len(slide.title) > 80:
+            errors.append(f"slide {index}: title too long")
+    return errors
+
+def test_validate_deck_rejects_long_title() -> None:
+    deck = DeckSpec(title="Demo", slides=[SlideSpec(title="x" * 81, bullets=["point"])])
+    assert validate_deck(deck) == ["slide 1: title too long"]
+```
+
+| Scenario | Check |
+| --- | --- |
+| Successful typed output | `isinstance(result.final_output, DeckSpec)` |
+| Negative schema test | Invalid fixtures fail Pydantic validation or deterministic validation |
+| Renderer boundary | Renderer accepts `DeckSpec`, not raw JSON text |
+| Debug/failure case | Preserve prompt version, schema version, and validation errors |
+
+For schemas that are not strict-compatible, confirm the need in source/docs and wrap the type with `AgentOutputSchema(YourType, strict_json_schema=False)`. Do not disable strict schema just to avoid fixing a weak output model.
+
+</testing-debugging-pattern>
+
 <common-mistakes>
 
 | Mistake | Fix |
@@ -91,6 +129,7 @@ render_pptx(deck, output_path="deck.pptx")
 | Optional fields everywhere | Make required fields explicit and fail fast |
 | Renderer accepts whatever the model produced | Validate before rendering or API calls |
 | Huge document embedded in output | Store large content separately and return references |
+| Tests parse JSON strings from `final_output` | Assert the typed object returned by `output_type` |
+| Validation failures are hard to reproduce | Log schema version, input reference, and validation errors |
 
 </common-mistakes>
-
