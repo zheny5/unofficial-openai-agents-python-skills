@@ -174,7 +174,7 @@ def score_output(task: LiveTask, text: str) -> dict[str, Any]:
     }
 
 
-def run_task(task: LiveTask, dry_run: bool) -> dict[str, Any]:
+def run_task(task: LiveTask, dry_run: bool, timeout_seconds: int) -> dict[str, Any]:
     prompt = build_prompt(task)
     cmd = claude_command(prompt)
     if dry_run:
@@ -185,14 +185,26 @@ def run_task(task: LiveTask, dry_run: bool) -> dict[str, Any]:
             "prompt_chars": len(prompt),
         }
 
-    completed = subprocess.run(
-        cmd,
-        cwd=ROOT,
-        check=False,
-        text=True,
-        capture_output=True,
-        timeout=180,
-    )
+    try:
+        completed = subprocess.run(
+            cmd,
+            cwd=ROOT,
+            check=False,
+            text=True,
+            capture_output=True,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        partial = output_text(exc.stdout or "") if isinstance(exc.stdout, str) else ""
+        return {
+            "task": task.name,
+            "dry_run": False,
+            "returncode": None,
+            "stderr": f"timed out after {timeout_seconds} seconds",
+            "output": partial,
+            "score": score_output(task, partial),
+            "timed_out": True,
+        }
     text = output_text(completed.stdout)
     result = {
         "task": task.name,
@@ -251,9 +263,12 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--format", choices=["json", "markdown"], default="markdown")
     parser.add_argument("--write-results", action="store_true")
+    parser.add_argument("--timeout-seconds", type=int, default=300)
     args = parser.parse_args()
 
-    results = [run_task(task, args.dry_run) for task in load_tasks(args.task)]
+    results = [
+        run_task(task, args.dry_run, args.timeout_seconds) for task in load_tasks(args.task)
+    ]
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "agent": args.agent,
