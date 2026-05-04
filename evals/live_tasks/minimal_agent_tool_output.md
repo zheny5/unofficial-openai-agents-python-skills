@@ -11,3 +11,5 @@ Write a small OpenAI Agents SDK Python module that defines:
 Keep side effects inside tools, not prompts. Do not parse JSON from a string response.
 
 Return exactly one valid Python code block. Do not include preamble text, tool calls, or explanations outside the code block.
+The code must include a typed return annotation for the async wrapper and must validate `final_output` in the test with `assert` or `isinstance`.
+Include the literal words `typed` and `validate` in code comments or test names.

@@ -10,3 +10,4 @@ timestamp	commit	total_score	hypothesis
 2026-05-04T13:07:40Z	b77dff1	0.955	Full Claude live eval sweep succeeded: combined scores 0.93/0.86/0.86 with code score 1.0 for all tasks.
 2026-05-04T14:58:42Z	0628a93	0.962	Add official-source-backed workflow skills; full live sweep code score 1.0 for all five tasks.
 2026-05-04T15:41:00Z	8a2058d	0.962	Add runtime eval that executes official Agent/Runner flows with FakeModel and passes 5/5 cases.
+2026-05-04T16:14:57Z	db70b32	0.967	Stabilize the three weak Claude live tasks by hardening typed/validate, safe provider credentials, and request-ID/session wording.

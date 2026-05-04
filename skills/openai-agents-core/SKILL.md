@@ -63,6 +63,38 @@ async def handle_message(message: str) -> str:
 
 </async-service-pattern>
 
+<typed-output-pattern>
+
+When downstream code depends on the result, make the wrapper typed and validate the final output directly.
+
+```python
+from pydantic import BaseModel
+from agents import Agent, Runner, function_tool
+
+class SearchResult(BaseModel):
+    title: str
+    url: str
+
+@function_tool
+def lookup_docs(query: str) -> str:
+    """Return a deterministic search result stub."""
+    return f"https://example.invalid/search?q={query}"
+
+agent = Agent(
+    name="searcher",
+    instructions="Use the tool and return a typed result.",
+    tools=[lookup_docs],
+    output_type=SearchResult,
+)
+
+async def run_search(query: str) -> SearchResult:
+    result = await Runner.run(agent, f"Search for {query}")
+    typed_output: SearchResult = result.final_output
+    return typed_output
+```
+
+</typed-output-pattern>
+
 <context-pattern>
 
 Use context for request-scoped application state, not for long documents that should live in files, databases, or retrieval systems.
@@ -121,9 +153,20 @@ def test_answer_once_smoke() -> None:
     assert output.strip()
 ```
 
+If the wrapper returns structured output, validate the typed `final_output` explicitly:
+
+```python
+async def test_run_search_returns_typed_output() -> None:
+    result = await run_search("openai agents")
+    assert isinstance(result, SearchResult)
+    assert result.title
+    assert result.url.startswith("https://")
+```
+
 | Scenario | Check |
 | --- | --- |
 | Minimal successful run | Test the wrapper returns non-empty `final_output` |
+| Typed structured output | Validate the typed `final_output` with `assert isinstance(...)` |
 | Tool-free smoke test | Use a prompt that should not require IO or side effects |
 | Expected failure/debug case | Preserve request ID, model, prompt version, and input reference |
 | Async entrypoint | Test `await Runner.run(...)` instead of calling `run_sync` inside async code |

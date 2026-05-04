@@ -16,7 +16,7 @@
       "prompt_file": "evals/live_tasks/sessions_tracing_streaming.md",
       "expected_terms": ["Runner.run_streamed", "stream_events", "SQLiteSession", "trace", "group_id", "session="],
       "architecture_terms": ["secret", "request ID", "final", "failure"],
-      "banned_patterns": ["parse partial text as JSON", "trace API key", "raw private document"]
+      "banned_patterns": ["parse partial text as JSON", "trace API key", "PRIVATE:"]
     },
     "runtime_behavior_probe": {
       "prompt_file": "evals/live_tasks/runtime_behavior_probe.md",

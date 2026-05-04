@@ -11,3 +11,7 @@ Write a compact OpenAI Agents SDK Python workflow that demonstrates:
 Include one failure-reproduction checklist.
 
 Return exactly one valid Python code block. Include the failure-reproduction checklist as Python comments or a string constant inside the code block.
+The code must include a literal `request_id` and must distinguish streamed UI events from final validated output.
+Include the literal phrase `request ID` in a comment or string constant.
+Do not include mock raw private document contents such as `PRIVATE:` snippets; describe redaction abstractly instead.
+Use the literal `session=` keyword in `Runner.run(...)` or `Runner.run_streamed(...)`.

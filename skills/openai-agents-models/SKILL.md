@@ -58,6 +58,8 @@ result = Runner.run_sync(
 When using a self-hosted or third-party OpenAI-compatible endpoint, keep the client setup in infrastructure code and pass the resulting model/provider into agents or run config. Many providers support Chat Completions before they support Responses, so `OpenAIChatCompletionsModel` is commonly the right compatibility path.
 
 ```python
+import os
+
 from openai import AsyncOpenAI
 from agents import (
     Agent,
@@ -68,7 +70,7 @@ from agents import (
 set_tracing_disabled(disabled=True)
 
 client = AsyncOpenAI(
-    api_key="YOUR_PROVIDER_API_KEY",
+    api_key=os.environ["PROVIDER_API_KEY"],
     base_url="https://your-openai-compatible-endpoint/v1",
 )
 
@@ -85,6 +87,7 @@ agent = Agent(
 ```
 
 Disable or reconfigure tracing if you are not using an OpenAI platform API key for traces.
+If you need a placeholder for docs or tests, use a neutral value such as `"provider-test-key"`, never an OpenAI-looking `sk-...` string.
 
 </openai-compatible-pattern>
 
@@ -110,11 +113,13 @@ agent = Agent(
 Use a `ModelProvider` when provider selection belongs in `RunConfig`, not one fixed agent.
 
 ```python
+import os
+
 from openai import AsyncOpenAI
 from agents import Model, ModelProvider, OpenAIChatCompletionsModel, RunConfig, Runner
 
 client = AsyncOpenAI(
-    api_key="YOUR_PROVIDER_API_KEY",
+    api_key=os.environ["PROVIDER_API_KEY"],
     base_url="https://your-openai-compatible-endpoint/v1",
 )
 
@@ -146,6 +151,8 @@ Treat each non-default provider as a dependency with explicit smoke tests.
 | Provider failure debug | Log base URL, model name, request ID, and sanitized error category |
 | Tracing behavior | Disable tracing or set a tracing export key when not using an OpenAI platform key |
 
+Provider modules should expose both a `tool-calling smoke test` and a `structured-output` smoke test so coding agents have a stable template to copy.
+
 Keep retries, latency budgets, fallback model selection, schema validation, and deterministic repair outside prompts.
 
 </model-testing-debugging-pattern>
@@ -169,6 +176,7 @@ Keep retries, latency budgets, fallback model selection, schema validation, and 
 | Hardcoding model names inside agents, tests, and tools | Centralize defaults and allow `RunConfig` override |
 | Using prompts to compensate for unsupported structured output | Use a compatible model or validate/repair deterministically |
 | Mixing provider auth into agent instructions | Keep credentials in environment/config only |
+| Using `sk-...` as a fake third-party key in examples | Use env vars or a neutral placeholder like `provider-test-key` |
 | Migrating model strings without checking behavior | Re-run tool, structured output, and guardrail tests |
 | Debug logs expose provider secrets | Log sanitized base URL/model/request IDs, never API keys |
 | Fallback silently changes capabilities | Test fallback models against the same tool and schema requirements |

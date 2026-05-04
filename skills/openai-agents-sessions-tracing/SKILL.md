@@ -42,6 +42,7 @@ async def stream_answer(prompt: str):
 <tracing-rules>
 
 - Include stable run metadata: workflow name, tenant/workspace ID, request ID, app version.
+- Use one explicit `request_id` per user-visible run and thread it through traces, logs, and bug reports.
 - Exclude secrets, raw credentials, and unnecessary full documents.
 - Preserve input/output fixtures for bugs that need reproduction.
 - Use traces to inspect tool calls, handoffs, guardrail trips, and model behavior.
@@ -76,8 +77,9 @@ async def run_with_session(message: str, *, session_id: str) -> str:
 
 async def stream_with_trace(prompt: str) -> list[str]:
     conversation_id = uuid4().hex[:16]
+    request_id = uuid4().hex[:12]
     chunks: list[str] = []
-    with trace("assistant-stream", group_id=conversation_id):
+    with trace("assistant-stream", group_id=conversation_id, metadata={"request_id": request_id}):
         result = Runner.run_streamed(agent, input=prompt)
         async for event in result.stream_events():
             if event.type == "raw_response_event":
@@ -89,11 +91,11 @@ async def stream_with_trace(prompt: str) -> list[str]:
 | --- | --- |
 | Session continuity | Same `SQLiteSession(session_id)` preserves conversation context |
 | Streaming UI | Collect streamed events, but validate final artifacts after completion |
-| Trace grouping | Use stable request/conversation IDs with `trace(..., group_id=...)` |
+| Trace grouping | Use stable `request_id` and conversation IDs with `trace(..., group_id=...)` |
 | Secret negative test | Assert trace metadata excludes API keys, tokens, and raw private documents |
 | Failure reproduction | Preserve request ID, model, prompt version, input reference, and validation errors |
 
-When debugging, inspect trace spans, tool calls, handoffs, guardrail trips, generated items, and failure context before changing prompts. Treat traces as observability artifacts, not durable business records.
+When debugging, inspect trace spans, tool calls, handoffs, guardrail trips, generated items, final validated output, and failure context before changing prompts. Treat traces as observability artifacts, not durable business records.
 
 </testing-debugging-pattern>
 
@@ -103,6 +105,7 @@ When debugging, inspect trace spans, tool calls, handoffs, guardrail trips, gene
 | --- | --- |
 | Streaming partial text directly into downstream JSON parser | Wait for final structured output |
 | Trace metadata includes API keys or full private documents | Redact and store references |
+| Streams are debugged without a request ID | Add a stable `request_id` to traces and logs |
 | Session history becomes the only source of business truth | Store business state separately |
 | Failed runs cannot be reproduced | Log request ID, model, prompt version, and input references |
 | Tool/handoff issues debugged from final text only | Inspect traces and generated items |
