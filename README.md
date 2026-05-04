@@ -7,6 +7,14 @@ These skills are modeled after the LangChain coding-agent skills style: compact
 trigger metadata, high-signal implementation guidance, short examples, and
 explicit fixes for common mistakes.
 
+## Evaluation
+
+This repo uses three layers of checks:
+
+- `python3 evals/run_static_eval.py --format markdown` checks skill coverage, trigger quality, and source-map drift.
+- `python3 evals/run_live_eval.py --agent claude --dry-run --format markdown` checks forward-test prompt coverage for coding agents.
+- `python3 evals/run_runtime_eval.py --format markdown` runs the official SDK runtime with the official repo's `FakeModel`, proving `Agent` and `Runner` behavior without an API key.
+
 ## Skills
 
 - `openai-agents-core` - agents, runner usage, run results, context, and basic lifecycle.

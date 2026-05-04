@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-05-04T15:41:00.623745+00:00",
+  "passed": 5,
+  "results": [
+    {
+      "case": "minimal_runner",
+      "details": {
+        "final_output": "hello from fake runtime"
+      },
+      "passed": true
+    },
+    {
+      "case": "structured_output",
+      "details": {
+        "final_output": {
+          "city": "Tokyo",
+          "temperature_c": 22
+        }
+      },
+      "passed": true
+    },
+    {
+      "case": "tool_call",
+      "details": {
+        "calls": [
+          "Paris"
+        ],
+        "final_output": "Paris is 22C."
+      },
+      "passed": true
+    },
+    {
+      "case": "streaming",
+      "details": {
+        "event_count": 11,
+        "final_output": "streamed final"
+      },
+      "passed": true
+    },
+    {
+      "case": "session",
+      "details": {
+        "item_count": 4,
+        "second_input_items": 3
+      },
+      "passed": true
+    }
+  ],
+  "returncode": 0,
+  "source_checkout": "/home/yuzheng/projects/openai-agents-python",
+  "source_commit": "9b57f057",
+  "stderr": "",
+  "stdout": "{\"results\": [{\"case\": \"minimal_runner\", \"details\": {\"final_output\": \"hello from fake runtime\"}, \"passed\": true}, {\"case\": \"structured_output\", \"details\": {\"final_output\": {\"city\": \"Tokyo\", \"temperature_c\": 22}}, \"passed\": true}, {\"case\": \"tool_call\", \"details\": {\"calls\": [\"Paris\"], \"final_output\": \"Paris is 22C.\"}, \"passed\": true}, {\"case\": \"streaming\", \"details\": {\"event_count\": 11, \"final_output\": \"streamed final\"}, \"passed\": true}, {\"case\": \"session\", \"details\": {\"item_count\": 4, \"second_input_items\": 3}, \"passed\": true}]}",
+  "total": 5
+}
