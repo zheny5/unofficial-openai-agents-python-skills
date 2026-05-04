@@ -58,6 +58,8 @@ def build_prompt(task: LiveTask) -> str:
 
 Use the installed/local skills conceptually if they are available, especially the OpenAI Agents Python skills.
 Do not edit files. Do not run tools. Output only the code or implementation guidance requested by the task.
+Do not say that you will inspect files, read skills, check the codebase, or use tools.
+If the task asks for a code block, return the requested code block immediately.
 
 Task:
 {task_text}

@@ -10,3 +10,4 @@ Write a small OpenAI Agents SDK Python module that defines:
 
 Keep side effects inside tools, not prompts. Do not parse JSON from a string response.
 
+Return exactly one valid Python code block. Do not include preamble text, tool calls, or explanations outside the code block.

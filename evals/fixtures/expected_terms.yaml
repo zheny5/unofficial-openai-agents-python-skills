@@ -41,7 +41,30 @@
       "skills": ["openai-agents-sessions-tracing"],
       "expected_terms": ["run_streamed", "stream_events", "session", "trace", "metadata"],
       "architecture_terms": ["redact", "reproduce", "request ID", "debug"]
+    },
+    "implementation_strategy": {
+      "prompt_file": "evals/tasks/implementation_strategy.md",
+      "skills": ["openai-agents-implementation-strategy"],
+      "expected_terms": ["latest release tag", "compatibility boundary", "RunState", "session persistence", "CLI", "env"],
+      "architecture_terms": ["released public API", "migration", "shim", "rewrite"]
+    },
+    "runtime_behavior_probe": {
+      "prompt_file": "evals/tasks/runtime_behavior_probe.md",
+      "skills": ["openai-agents-runtime-probe"],
+      "expected_terms": ["case_id", "scenario", "mode", "question", "setup", "result_flag", "evidence"],
+      "architecture_terms": ["repeat-3", "warm-up", "fresh state", "control", "cleanup"]
+    },
+    "code_change_verification": {
+      "prompt_file": "evals/tasks/code_change_verification.md",
+      "skills": ["openai-agents-code-verification"],
+      "expected_terms": ["py_compile", "static eval", "live eval", "git diff --check", "make", "tests"],
+      "architecture_terms": ["fail fast", "verification stack", "smoke", "source map"]
+    },
+    "docs_sync": {
+      "prompt_file": "evals/tasks/docs_sync.md",
+      "skills": ["openai-agents-docs-sync"],
+      "expected_terms": ["source map", "doc-first", "code-first", "official", "English docs"],
+      "architecture_terms": ["feature inventory", "source checkout", "drift", "mapping"]
     }
   }
 }
-

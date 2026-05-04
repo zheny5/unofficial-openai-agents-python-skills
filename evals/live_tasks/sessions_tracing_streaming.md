@@ -10,3 +10,4 @@ Write a compact OpenAI Agents SDK Python workflow that demonstrates:
 
 Include one failure-reproduction checklist.
 
+Return exactly one valid Python code block. Include the failure-reproduction checklist as Python comments or a string constant inside the code block.

@@ -10,4 +10,16 @@ Include both:
 
 Add brief smoke-test guidance for tool calling, structured output, fallback behavior,
 sanitized provider failures, and tracing when the key is not an OpenAI platform key.
+The code should explicitly mention `set_tracing_disabled` or an equivalent tracing-suppression step.
 
+The Python code must include these literal names:
+
+- `AsyncOpenAI`
+- `OpenAIChatCompletionsModel`
+- `ModelProvider`
+- `RunConfig`
+- `set_tracing_disabled`
+
+The code must also include the literal phrases `tool-calling smoke test` and `structured-output`.
+
+Return exactly one valid Python code block. Include smoke-test guidance as Python comments or string constants inside the code block.

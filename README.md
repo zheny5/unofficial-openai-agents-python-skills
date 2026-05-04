@@ -16,6 +16,10 @@ explicit fixes for common mistakes.
 - `openai-agents-handoffs` - multi-agent handoffs and routing design.
 - `openai-agents-guardrails` - input/output guardrails and policy checks.
 - `openai-agents-sessions-tracing` - sessions, tracing, streaming, and debugging.
+- `openai-agents-implementation-strategy` - compatibility boundaries, release gates, and rewrite vs shim decisions.
+- `openai-agents-runtime-probe` - local/live runtime probes, case matrices, and failure/repetition analysis.
+- `openai-agents-code-verification` - ordered verification stacks and fail-fast checks after code changes.
+- `openai-agents-docs-sync` - source-backed docs and skill drift correction against the official repo.
 
 ## Install
 
@@ -31,4 +35,3 @@ Install for a specific agent:
 npx skills add zheny5/openai-agents-python-skills --agent codex --skill '*' --yes --global
 npx skills add zheny5/openai-agents-python-skills --agent claude-code --skill '*' --yes --global
 ```
-

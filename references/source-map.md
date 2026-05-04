@@ -3,7 +3,7 @@
 Source checkout used for calibration:
 
 - Local path: `/home/yuzheng/projects/openai-agents-python`
-- Observed commit: `f2fb9ff`
+- Observed commit: `9b57f057`
 - Official docs: `https://openai.github.io/openai-agents-python/`
 
 Use this map before changing any SDK API examples in `skills/**/SKILL.md`.
@@ -19,6 +19,10 @@ Use this map before changing any SDK API examples in `skills/**/SKILL.md`.
 | `openai-agents-handoffs` | `examples/agent_patterns/routing.py`, `examples/handoffs/message_filter.py`, `src/agents/handoffs/` | `handoffs=[...]`, `result.current_agent`, `trace(...)`, `HandoffInputData` |
 | `openai-agents-guardrails` | `examples/agent_patterns/input_guardrails.py`, `examples/agent_patterns/output_guardrails.py`, `tests/test_guardrails.py` | `input_guardrail`, `output_guardrail`, `GuardrailFunctionOutput`, `InputGuardrailTripwireTriggered`, `OutputGuardrailTripwireTriggered`, `output_info` |
 | `openai-agents-sessions-tracing` | `examples/basic/stream_text.py`, `examples/agent_patterns/routing.py`, `examples/memory/sqlite_session_example.py`, `src/agents/tracing/` | `Runner.run_streamed`, `stream_events`, `trace`, `SQLiteSession`, `session=` |
+| `openai-agents-implementation-strategy` | `.agents/skills/implementation-strategy/SKILL.md` | `latest release tag`, `compatibility boundary`, `RunState`, `session persistence`, `CLI/config/env` |
+| `openai-agents-runtime-probe` | `.agents/skills/runtime-behavior-probe/SKILL.md`, `.agents/skills/runtime-behavior-probe/references/validation-matrix.md` | `case matrix`, `repeat-N`, `warm-up + repeat-N`, `fresh state`, `env vars approval` |
+| `openai-agents-code-verification` | `.agents/skills/code-change-verification/SKILL.md`, `.agents/skills/code-change-verification/scripts/run.sh` | `py_compile`, `static eval`, `dry-run`, `git diff --check`, `fail fast` |
+| `openai-agents-docs-sync` | `.agents/skills/docs-sync/SKILL.md`, `.agents/skills/docs-sync/references/doc-coverage-checklist.md` | `source map`, `doc-first`, `code-first`, `feature inventory`, `English docs` |
 
 ## Calibration Rules
 
@@ -27,4 +31,3 @@ Use this map before changing any SDK API examples in `skills/**/SKILL.md`.
 - For custom model endpoints, use `from openai import AsyncOpenAI` and `OpenAIChatCompletionsModel(..., openai_client=client)`.
 - For guardrails, return `GuardrailFunctionOutput(output_info=..., tripwire_triggered=...)` and test tripwire exception paths.
 - For routing, validate selected specialist or `result.current_agent`; do not rely only on final prose.
-

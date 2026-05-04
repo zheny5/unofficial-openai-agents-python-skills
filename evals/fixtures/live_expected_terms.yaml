@@ -17,7 +17,18 @@
       "expected_terms": ["Runner.run_streamed", "stream_events", "SQLiteSession", "trace", "group_id", "session="],
       "architecture_terms": ["secret", "request ID", "final", "failure"],
       "banned_patterns": ["parse partial text as JSON", "trace API key", "raw private document"]
+    },
+    "runtime_behavior_probe": {
+      "prompt_file": "evals/live_tasks/runtime_behavior_probe.md",
+      "expected_terms": ["case_id", "scenario", "mode", "question", "setup", "result_flag", "evidence"],
+      "architecture_terms": ["repeat-3", "warm-up", "control", "cleanup"],
+      "banned_patterns": ["read secrets without approval", "mix several questions"]
+    },
+    "code_change_verification": {
+      "prompt_file": "evals/live_tasks/code_change_verification.md",
+      "expected_terms": ["py_compile", "static eval", "live eval", "git diff --check", "make format", "make lint", "make typecheck", "make tests"],
+      "architecture_terms": ["fail fast", "verification stack", "smoke", "source map"],
+      "banned_patterns": ["skip steps", "run everything blindly"]
     }
   }
 }
-

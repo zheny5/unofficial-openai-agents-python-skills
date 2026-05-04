@@ -8,7 +8,10 @@
     "openai-agents-structured-output": ["examples/research_bot/agents/planner_agent.py", "examples/basic/non_strict_output_type.py", "src/agents/agent_output.py"],
     "openai-agents-handoffs": ["examples/agent_patterns/routing.py", "examples/handoffs/message_filter.py"],
     "openai-agents-guardrails": ["examples/agent_patterns/input_guardrails.py", "examples/agent_patterns/output_guardrails.py", "tests/test_guardrails.py"],
-    "openai-agents-sessions-tracing": ["examples/basic/stream_text.py", "examples/memory/sqlite_session_example.py"]
+    "openai-agents-sessions-tracing": ["examples/basic/stream_text.py", "examples/memory/sqlite_session_example.py"],
+    "openai-agents-implementation-strategy": [".agents/skills/implementation-strategy/SKILL.md"],
+    "openai-agents-runtime-probe": [".agents/skills/runtime-behavior-probe/SKILL.md", ".agents/skills/runtime-behavior-probe/references/validation-matrix.md"],
+    "openai-agents-code-verification": [".agents/skills/code-change-verification/SKILL.md", ".agents/skills/code-change-verification/scripts/run.sh"],
+    "openai-agents-docs-sync": [".agents/skills/docs-sync/SKILL.md", ".agents/skills/docs-sync/references/doc-coverage-checklist.md"]
   }
 }
-
