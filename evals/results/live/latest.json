@@ -1,122 +1,267 @@
 {
-  "agent": "claude",
+  "agent": "codex",
   "dry_run": false,
-  "generated_at": "2026-05-04T16:14:57.522331+00:00",
+  "generated_at": "2026-05-05T13:48:22.529014+00:00",
+  "repeat": 1,
   "results": [
     {
       "dry_run": false,
-      "output": "```python\n\"\"\"Minimal agent with function tool and typed structured output.\"\"\"\nfrom __future__ import annotations\n\nfrom pydantic import BaseModel\nfrom agents import Agent, Runner, function_tool\n\n\nclass AnalysisResult(BaseModel):\n    \"\"\"Typed output model for agent responses.\"\"\"\n    topic: str\n    sentiment: str\n    confidence: float\n\n\n@function_tool\ndef fetch_topic() -> str:\n    \"\"\"Fetch a topic to analyze. Side effect lives in the tool, not the prompt.\"\"\"\n    return \"OpenAI Agents SDK\"\n\n\nasync def run_analysis() -> AnalysisResult:\n    \"\"\"Run the agent and return the typed final_output.\"\"\"\n    agent: Agent[None] = Agent[None](\n        name=\"Analyst\",\n        instructions=\"Analyze the topic from the fetch_topic tool and return a structured result.\",\n        tools=[fetch_topic],\n        output_type=AnalysisResult,\n    )\n    result = await Runner.run(agent)\n    # The final_output is typed by the output_type above\n    return result.final_output\n\n\n# --- validation ---\n\ndef test_analysis_result_is_typed() -> None:\n    \"\"\"Validate that final_output is an AnalysisResult with correct fields.\"\"\"\n    import asyncio\n\n    output = asyncio.run(run_analysis())\n    assert isinstance(output, AnalysisResult), \"final_output must be a typed AnalysisResult\"\n    assert output.topic == \"OpenAI Agents SDK\"\n    assert isinstance(output.sentiment, str)\n    assert isinstance(output.confidence, float)\n```",
-      "returncode": 0,
+      "output": "",
+      "returncode": null,
       "score": {
-        "architecture_score": 1.0,
-        "banned_patterns_found": [],
-        "code_quality": {
-          "agents_imports": 1,
-          "banned_imports": [],
-          "code_blocks": 1,
-          "code_quality_score": 1.0,
-          "parse_errors": []
-        },
-        "combined_score": 1.0,
-        "expected_score": 1.0,
-        "missing_architecture_terms": [],
-        "missing_expected_terms": [],
-        "score": 1.0
-      },
-      "stderr": "",
-      "task": "minimal_agent_tool_output"
-    },
-    {
-      "dry_run": false,
-      "output": "```python\n\"\"\"\nSelf-hosted OpenAI-compatible model endpoint example for the OpenAI Agents SDK.\n\nCovers:\n- Agent-level model wiring via OpenAIChatCompletionsModel\n- Run-level model routing via a custom ModelProvider + RunConfig\n- Smoke-test guidance for tool calling, structured output, fallback,\n  sanitized provider failures, and tracing suppression.\n\"\"\"\n\nimport os\n\nfrom openai import AsyncOpenAI\nfrom agents import (\n    Agent,\n    OpenAIChatCompletionsModel,\n    ModelProvider,\n    RunConfig,\n    Runner,\n    function_tool,\n    set_tracing_disabled,\n)\nfrom pydantic import BaseModel\n\n\n# \u2500\u2500 Tracing \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# Disable tracing when the API key is not an OpenAI platform key; otherwise\n# the SDK will attempt to send trace data to OpenAI and fail with auth errors.\nset_tracing_disabled(True)\n\n\n# \u2500\u2500 Shared client \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n_client = AsyncOpenAI(\n    base_url=os.environ.get(\"PROVIDER_BASE_URL\", \"http://localhost:8000/v1\"),\n    api_key=os.environ.get(\"PROVIDER_API_KEY\", \"provider-test-key\"),\n)\n\n\n# \u2500\u2500 Agent-level model wiring \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n# Pin a specific model instance directly on the Agent.\nweather_agent = Agent(\n    name=\"weather_agent\",\n    instructions=\"You are a helpful assistant.\",\n    model=OpenAIChatCompletionsModel(\n        model=os.environ.get(\"MODEL_NAME\", \"gpt-4o-mini\"),\n        openai_client=_client,\n    ),\n)\n\n\n# \u2500\u2500 Run-level model routing (ModelProvider + RunConfig) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nclass CustomModelProvider(ModelProvider):\n    \"\"\"Returns an OpenAIChatCompletionsModel pointing at our self-hosted endpoint.\"\"\"\n\n    def get_model(self, model_name: str | None) -> OpenAIChatCompletionsModel:\n        return OpenAIChatCompletionsModel(\n            model=model_name or os.environ.get(\"MODEL_NAME\", \"gpt-4o-mini\"),\n            openai_client=_client,\n        )\n\n\n_provider = CustomModelProvider()\n_run_config = RunConfig(model_provider=_provider)\n\n\n# \u2500\u2500 Tool calling smoke test \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n@function_tool\ndef get_weather(city: str) -> str:\n    \"\"\"Return a mock weather report for the given city.\"\"\"\n    return f\"The weather in {city} is sunny and 22\u00b0C.\"\n\n\nasync def smoke_tool_calling() -> None:\n    \"\"\"tool-calling smoke test\"\"\"\n    result = await Runner.run(\n        weather_agent,\n        input=\"What's the weather in Tokyo?\",\n        run_config=_run_config,\n    )\n    print(\"Tool-calling result:\", result.final_output)\n\n\n# \u2500\u2500 Structured-output smoke test \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nclass CalendarEvent(BaseModel):\n    name: str\n    date: str\n    participants: list[str]\n\n\nasync def smoke_structured_output() -> None:\n    \"\"\"structured-output smoke test\"\"\"\n    structured_agent = Agent(\n        name=\"structured_agent\",\n        instructions=\"Extract structured data from the user's message.\",\n        model=OpenAIChatCompletionsModel(\n            model=os.environ.get(\"MODEL_NAME\", \"gpt-4o-mini\"),\n            openai_client=_client,\n        ),\n        output_type=CalendarEvent,\n    )\n    result = await Runner.run(\n        structured_agent,\n        input=\"Schedule a project review next Tuesday with Alice and Bob.\",\n        run_config=_run_config,\n    )\n    print(\"Structured-output result:\", result.final_output)\n\n\n# \u2500\u2500 Fallback / sanitized-failure guidance \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\"\"\"\nFallback behavior\n------------------\nWrap Runner.run() in try/except and catch openai.APIStatusError /\nopenai.APITimeoutError.  On failure you can retry with a different model name\nthrough the same client, or create a second ModelProvider backed by a\ndifferent base_url and pass it via RunConfig.\n\nSanitized provider failures\n----------------------------\nNever surface raw provider exceptions to end users \u2014 they may leak internal\nhostnames, model aliases, or IP addresses.  Log the original error server-side\nand return a generic message like \"The model service is temporarily\nunavailable.\"\n\nTracing\n-------\nIf you do want tracing, wire up a custom trace processor instead of the\ndefault OpenAI sink.  With set_tracing_disabled(False) and a non-OpenAI key\nthe SDK will raise authentication errors on every trace flush.\n\"\"\"\n\n\nif __name__ == \"__main__\":\n    import asyncio\n\n    asyncio.run(smoke_tool_calling())\n```",
-      "returncode": 0,
-      "score": {
-        "architecture_score": 1.0,
-        "banned_patterns_found": [],
-        "code_quality": {
-          "agents_imports": 1,
-          "banned_imports": [],
-          "code_blocks": 1,
-          "code_quality_score": 1.0,
-          "parse_errors": []
-        },
-        "combined_score": 1.0,
-        "expected_score": 1.0,
-        "missing_architecture_terms": [],
-        "missing_expected_terms": [],
-        "score": 1.0
-      },
-      "stderr": "",
-      "task": "custom_model_provider"
-    },
-    {
-      "dry_run": false,
-      "output": "```python\n\"\"\"\nOpenAI Agents SDK: Sessions, Tracing & Streaming\n\"\"\"\nimport asyncio\nimport secrets\nfrom openai.agents import Agent, Runner, trace\nfrom openai.agents.session import SQLiteSession\n\n\nasync def main():\n    # A unique request_id to correlate logs, traces, and session turns.\n    request_id: str = secrets.token_hex(8)\n\n    # SQLiteSession persists conversation history across turns.\n    session = SQLiteSession(db_path=\"/tmp/session.db\")\n\n    agent = Agent(\n        name=\"SupportAgent\",\n        instructions=\"You are a helpful support agent.\",\n    )\n\n    # ------------------------------------------------------------------\n    # Streamed run \u2014 yields token-level events for progressive UI updates.\n    #\n    # STREAMED UI EVENTS          FINAL VALIDATED OUTPUT\n    # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500      \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    # Raw, partial token deltas   Complete post-tool response\n    # Not yet validated           Fully validated by guardrails\n    # Suitable for live render    Suitable for integration tests\n    # Accessed via stream_events  Accessed via stream.result.final_output\n    # ------------------------------------------------------------------\n    stream = Runner.run_streamed(\n        agent,\n        \"What was my last question?\",\n        session=session,  # literal `session=` keyword\n    )\n\n    async for event in stream.stream_events():\n        if event.type == \"raw_response_event\":\n            # Render raw token in UI; this is NOT the final answer.\n            # request ID: {request_id}\n            print(f\"[LIVE] {event.data.delta}\", end=\"\", flush=True)\n\n    result = stream.result\n    validated_answer = result.final_output\n    print(f\"\\n[FINAL] {validated_answer}\")\n\n    # ------------------------------------------------------------------\n    # Trace the full session under one group_id for observability.\n    #\n    # Security: avoid leaking secrets or raw private documents into\n    # trace metadata. Never include PII, passwords, or raw document\n    # text in the metadata dict. Redact to abstract summaries:\n    #   {\"doc_count\": 5, \"request_id_hash\": \"<prefix>\", \"source\": \"<sanitized>\"}\n    # Use group_id to correlate all traces from the same session.\n    # ------------------------------------------------------------------\n    with trace(\n        \"support-session-trace\",\n        group_id=session.session_id,\n        metadata={\n            \"request_id\": request_id,\n            \"context_size\": \"<redacted: document count only>\",\n        },\n    ):\n        stream2 = Runner.run_streamed(\n            agent,\n            \"Summarize the conversation.\",\n            session=session,\n        )\n        async for event in stream2.stream_events():\n            if event.type == \"raw_response_event\":\n                print(f\"[LIVE] {event.data.delta}\", end=\"\", flush=True)\n        print(f\"\\n[FINAL] {stream2.result.final_output}\")\n\n    # ------------------------------------------------------------------\n    # Failure-reproduction checklist\n    # ------------------------------------------------------------------\n    # \"\"\"\n    # [ ] SQLiteSession db_path is writable and not locked by another process\n    # [ ] session= keyword is passed to Runner.run_streamed (not omitted)\n    # [ ] stream_events() is awaited with `async for`, not a sync `for`\n    # [ ] stream.result is accessed AFTER the events are fully drained\n    # [ ] group_id is the same session_id across all session turns\n    # [ ] Trace metadata contains no raw secrets or private document bodies\n    # [ ] request_id appears in both trace metadata and application logs\n    # [ ] UI renders raw_response_event.delta, never final_output directly\n    # [ ] Integration tests assert on result.final_output, not streamed events\n    # [ ] Streaming errors (e.g. connection drop) are caught separately\n    # [ ] Uploaded documents are sanitized before reaching trace metadata\n    # \"\"\"\n\n\nif __name__ == \"__main__\":\n    asyncio.run(main())\n```",
-      "returncode": 0,
-      "score": {
-        "architecture_score": 1.0,
+        "architecture_score": 0.0,
         "banned_patterns_found": [],
         "code_quality": {
           "agents_imports": 0,
           "banned_imports": [],
-          "code_blocks": 1,
-          "code_quality_score": 1.0,
+          "code_blocks": 0,
+          "code_quality_score": 0.0,
           "parse_errors": []
         },
-        "combined_score": 1.0,
-        "expected_score": 1.0,
-        "missing_architecture_terms": [],
-        "missing_expected_terms": [],
-        "score": 1.0
+        "combined_score": 0.0,
+        "expected_score": 0.0,
+        "missing_architecture_terms": [
+          "tool",
+          "typed",
+          "validate",
+          "test"
+        ],
+        "missing_expected_terms": [
+          "Agent",
+          "Runner.run",
+          "function_tool",
+          "BaseModel",
+          "output_type",
+          "final_output"
+        ],
+        "score": 0.0
       },
-      "stderr": "",
-      "task": "sessions_tracing_streaming"
+      "stderr": "timed out after 300 seconds",
+      "task": "minimal_agent_tool_output",
+      "task_family": "snippet",
+      "timed_out": true
     },
     {
       "dry_run": false,
-      "output": "```python\nimport time\nimport json\nfrom dataclasses import dataclass, field, asdict\nfrom typing import Any, Optional\n\n\n@dataclass\nclass CaseObservation:\n    case_id: str\n    scenario: str\n    mode: str\n    question: str\n    setup: dict\n    result_flag: bool\n    evidence: dict\n\n    def to_dict(self) -> dict:\n        return asdict(self)\n\n\nRuntimeMatrix = list[dict[str, Any]]\n\n\ndef build_validation_matrix() -> RuntimeMatrix:\n    \"\"\"Return a compact validation matrix for runtime behavior probes.\"\"\"\n    return [\n        {\n            \"case_id\": \"ctrl-01\",\n            \"scenario\": \"basic-turn\",\n            \"mode\": \"control\",\n            \"question\": \"Does the agent return a response within 10s on first run?\",\n            \"setup\": {\"temperature\": 0.0, \"max_tokens\": 50},\n            \"result_flag\": False,\n            \"evidence\": {},\n        },\n        {\n            \"case_id\": \"rep-01\",\n            \"scenario\": \"repeated-invoke\",\n            \"mode\": \"repeat-3\",\n            \"question\": \"Do three consecutive calls with identical input produce consistent turn IDs?\",\n            \"setup\": {\"temperature\": 0.0, \"max_tokens\": 50, \"repeat_count\": 3},\n            \"result_flag\": False,\n            \"evidence\": {},\n        },\n        {\n            \"case_id\": \"wup-01\",\n            \"scenario\": \"warm-start\",\n            \"mode\": \"warm-up\",\n            \"question\": \"Does a no-op prompt before a real task reduce latency on the second call?\",\n            \"setup\": {\"temperature\": 0.0, \"max_tokens\": 50, \"warmup_prompt\": \"\"},\n            \"result_flag\": False,\n            \"evidence\": {},\n        },\n        {\n            \"case_id\": \"cln-01\",\n            \"scenario\": \"session-teardown\",\n            \"mode\": \"cleanup\",\n            \"question\": \"Does the runner release session resources after an explicit close?\",\n            \"setup\": {\"temperature\": 0.0, \"max_tokens\": 50, \"close_method\": \"force\"},\n            \"result_flag\": False,\n            \"evidence\": {},\n        },\n    ]\n\n\ndef record_observation(\n    matrix: RuntimeMatrix,\n    case_id: str,\n    result_flag: bool,\n    evidence: Optional[dict] = None,\n) -> CaseObservation:\n    \"\"\"Match a case by case_id, record the result and evidence, and return the observation.\"\"\"\n    entry = next(item for item in matrix if item[\"case_id\"] == case_id)\n    entry[\"result_flag\"] = result_flag\n    entry[\"evidence\"] = evidence or {}\n\n    return CaseObservation(\n        case_id=case_id,\n        scenario=entry[\"scenario\"],\n        mode=entry[\"mode\"],\n        question=entry[\"question\"],\n        setup=entry[\"setup\"],\n        result_flag=result_flag,\n        evidence=entry[\"evidence\"],\n    )\n\n\n# Example usage (guarded so it only runs when this module is executed directly):\nif __name__ == \"__main__\":\n    mat = build_validation_matrix()\n\n    # --- Record a fresh (first-run) observation for the control case ---\n    obs_ctrl = record_observation(\n        mat,\n        \"ctrl-01\",\n        result_flag=True,\n        evidence={\"elapsed_ms\": 1234, \"turn_id\": \"abc-1\"},\n    )\n    print(f\"Control: {obs_ctrl}\")\n\n    # --- Record a repeat-3 observation showing *reused* (cached-like) state ---\n    obs_rep = record_observation(\n        mat,\n        \"rep-01\",\n        result_flag=True,\n        evidence={\n            \"turn_ids\": [\"abc-2\", \"abc-2\", \"abc-2\"],\n            \"all_identical\": True,\n            \"session_reused\": True,\n        },\n    )\n    print(f\"Repeat-3: {obs_rep}\")\n\n    # --- Record a warm-up observation showing latency delta (fresh vs reused) ---\n    obs_wup = record_observation(\n        mat,\n        \"wup-01\",\n        result_flag=True,\n        evidence={\n            \"cold_elapsed_ms\": 2100,\n            \"warm_elapsed_ms\": 340,\n            \"delta_ms\": -1760,\n            \"state_reused\": True,\n        },\n    )\n    print(f\"Warm-up: {obs_wup}\")\n\n    # --- Record a cleanup observation ---\n    obs_cln = record_observation(\n        mat,\n        \"cln-01\",\n        result_flag=True,\n        evidence={\"session_alive_after_close\": False, \"resources_released\": True},\n    )\n    print(f\"Cleanup: {obs_cln}\")\n```",
-      "returncode": 0,
+      "output": "",
+      "returncode": null,
       "score": {
-        "architecture_score": 1.0,
+        "architecture_score": 0.0,
         "banned_patterns_found": [],
         "code_quality": {
           "agents_imports": 0,
           "banned_imports": [],
-          "code_blocks": 1,
-          "code_quality_score": 1.0,
+          "code_blocks": 0,
+          "code_quality_score": 0.0,
           "parse_errors": []
         },
-        "combined_score": 1.0,
-        "expected_score": 1.0,
-        "missing_architecture_terms": [],
-        "missing_expected_terms": [],
-        "score": 1.0
+        "combined_score": 0.0,
+        "expected_score": 0.0,
+        "missing_architecture_terms": [
+          "tool-calling smoke test",
+          "structured-output",
+          "fallback",
+          "sanitized"
+        ],
+        "missing_expected_terms": [
+          "AsyncOpenAI",
+          "OpenAIChatCompletionsModel",
+          "ModelProvider",
+          "RunConfig",
+          "model_provider",
+          "set_tracing_disabled"
+        ],
+        "score": 0.0
       },
-      "stderr": "",
-      "task": "runtime_behavior_probe"
+      "stderr": "timed out after 300 seconds",
+      "task": "custom_model_provider",
+      "task_family": "workflow",
+      "timed_out": true
     },
     {
       "dry_run": false,
-      "output": "```python\n# verification_stack.py \u2014 fail fast verification stack for OpenAI Agents SDK changes\n\nSTEPS = [\n    # fail fast: reject formatting issues before anything else\n    (\"source map integrity\", \"git diff --check\"),\n    (\"lint\",                \"make lint\"),\n    (\"format check\",        \"make format\"),\n\n    # smoke: syntax and import sanity\n    (\"syntax smoke check\",  \"python3 -m py_compile\"),\n    (\"typecheck\",           \"make typecheck\"),\n\n    # targeted tests and repo-specific evals\n    (\"unit tests\",          \"make tests\"),\n    (\"static eval\",         \"python3 evals/run_static_eval.py --format markdown\"),\n    (\"live eval (dry run)\", \"python3 evals/run_live_eval.py --agent claude --dry-run --format markdown\"),\n]\n```",
-      "returncode": 0,
+      "output": "",
+      "returncode": null,
       "score": {
-        "architecture_score": 1.0,
+        "architecture_score": 0.0,
         "banned_patterns_found": [],
         "code_quality": {
           "agents_imports": 0,
           "banned_imports": [],
-          "code_blocks": 1,
-          "code_quality_score": 1.0,
+          "code_blocks": 0,
+          "code_quality_score": 0.0,
           "parse_errors": []
         },
-        "combined_score": 1.0,
-        "expected_score": 1.0,
-        "missing_architecture_terms": [],
-        "missing_expected_terms": [],
-        "score": 1.0
+        "combined_score": 0.0,
+        "expected_score": 0.0,
+        "missing_architecture_terms": [
+          "secret",
+          "request ID",
+          "final",
+          "failure"
+        ],
+        "missing_expected_terms": [
+          "Runner.run_streamed",
+          "stream_events",
+          "SQLiteSession",
+          "trace",
+          "group_id",
+          "session="
+        ],
+        "score": 0.0
       },
-      "stderr": "",
-      "task": "code_change_verification"
+      "stderr": "timed out after 300 seconds",
+      "task": "sessions_tracing_streaming",
+      "task_family": "workflow",
+      "timed_out": true
+    },
+    {
+      "dry_run": false,
+      "output": "",
+      "returncode": null,
+      "score": {
+        "architecture_score": 0.0,
+        "banned_patterns_found": [],
+        "code_quality": {
+          "agents_imports": 0,
+          "banned_imports": [],
+          "code_blocks": 0,
+          "code_quality_score": 0.0,
+          "parse_errors": []
+        },
+        "combined_score": 0.0,
+        "expected_score": 0.0,
+        "missing_architecture_terms": [
+          "repeat-3",
+          "warm-up",
+          "control",
+          "cleanup"
+        ],
+        "missing_expected_terms": [
+          "case_id",
+          "scenario",
+          "mode",
+          "question",
+          "setup",
+          "result_flag",
+          "evidence"
+        ],
+        "score": 0.0
+      },
+      "stderr": "timed out after 300 seconds",
+      "task": "runtime_behavior_probe",
+      "task_family": "workflow",
+      "timed_out": true
+    },
+    {
+      "dry_run": false,
+      "output": "",
+      "returncode": null,
+      "score": {
+        "architecture_score": 0.0,
+        "banned_patterns_found": [],
+        "code_quality": {
+          "agents_imports": 0,
+          "banned_imports": [],
+          "code_blocks": 0,
+          "code_quality_score": 0.0,
+          "parse_errors": []
+        },
+        "combined_score": 0.0,
+        "expected_score": 0.0,
+        "missing_architecture_terms": [
+          "fail fast",
+          "verification stack",
+          "smoke",
+          "source map"
+        ],
+        "missing_expected_terms": [
+          "py_compile",
+          "static eval",
+          "live eval",
+          "git diff --check",
+          "make format",
+          "make lint",
+          "make typecheck",
+          "make tests"
+        ],
+        "score": 0.0
+      },
+      "stderr": "timed out after 300 seconds",
+      "task": "code_change_verification",
+      "task_family": "workflow",
+      "timed_out": true
+    },
+    {
+      "dry_run": false,
+      "output": "",
+      "returncode": 1,
+      "score": {
+        "architecture_score": 0.0,
+        "banned_patterns_found": [],
+        "code_quality": {
+          "agents_imports": 0,
+          "banned_imports": [],
+          "code_blocks": 0,
+          "code_quality_score": 0.0,
+          "parse_errors": []
+        },
+        "combined_score": 0.0,
+        "expected_score": 0.0,
+        "missing_architecture_terms": [
+          "tool-calling smoke test",
+          "structured-output",
+          "sanitized",
+          "request ID"
+        ],
+        "missing_expected_terms": [
+          "AsyncOpenAI",
+          "OpenAIChatCompletionsModel",
+          "RunConfig",
+          "ModelProvider",
+          "set_tracing_disabled",
+          "provider-test-key"
+        ],
+        "score": 0.0
+      },
+      "stderr": "WARNING: proceeding, even though we could not update PATH: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"/tmp/codex-home-lwdl4oe7\"))\nReading additional input from stdin...\nOpenAI Codex v0.125.0 (research preview)\n--------\nworkdir: /home/yuzheng/projects/openai-agents-python-skills\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: none\nreasoning summaries: none\nsession id: 019df861-32ef-7e82-8f71-d956350496af\n--------\nuser\nYou are evaluating whether local Agent Skills help write OpenAI Agents SDK Python code.\n\nUse the installed/local skills conceptually if they are available, especially the OpenAI Agents Python skills.\nDo not edit files. Do not run tools. Output only the code or implementation guidance requested by the task.\nDo not say that you will inspect files, read skills, check the codebase, or use tools.\nIf the task asks for a code block, return the requested code block immediately.\n\nTask:\n# Live Task: Provider Integration Module\n\nWrite a compact OpenAI Agents SDK Python provider module for a self-hosted\nOpenAI-compatible endpoint.\n\nIt must include:\n\n- a reusable provider factory\n- `AsyncOpenAI`\n- `OpenAIChatCompletionsModel`\n- `ModelProvider`\n- `RunConfig`\n- `set_tracing_disabled`\n- a `tool-calling smoke test`\n- a `structured-output` smoke test\n- a neutral credential placeholder like `provider-test-key`\n- a sanitized failure note\n- a `request ID` in logs or comments\n\nReturn exactly one valid Python code block.\nInclude the literal phrases `tool-calling smoke test`, `structured-output`, `sanitized`, and `request ID` in comments or string constants.\n\n\nERROR: Reconnecting... 2/5\nERROR: Reconnecting... 3/5\nERROR: Reconnecting... 4/5\nERROR: Reconnecting... 5/5\nERROR: Reconnecting... 1/5\nERROR: Reconnecting... 2/5\nERROR: Reconnecting... 3/5\nERROR: Reconnecting... 4/5\nERROR: Reconnecting... 5/5\nERROR: stream disconnected before completion: error sending request for url (https://api.openai.com/v1/responses)\nERROR: stream disconnected before completion: error sending request for url (https://api.openai.com/v1/responses)",
+      "task": "provider_integration_module",
+      "task_family": "workflow"
+    },
+    {
+      "dry_run": false,
+      "output": "",
+      "returncode": 1,
+      "score": {
+        "architecture_score": 0.0,
+        "banned_patterns_found": [],
+        "code_quality": {
+          "agents_imports": 0,
+          "banned_imports": [],
+          "code_blocks": 0,
+          "code_quality_score": 0.0,
+          "parse_errors": []
+        },
+        "combined_score": 0.0,
+        "expected_score": 0.0,
+        "missing_architecture_terms": [
+          "failure",
+          "reproduce",
+          "validate",
+          "secret"
+        ],
+        "missing_expected_terms": [
+          "request_id",
+          "trace",
+          "group_id",
+          "final_output",
+          "session="
+        ],
+        "score": 0.0
+      },
+      "stderr": "WARNING: proceeding, even though we could not update PATH: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"/tmp/codex-home-1zhytvj4\"))\nReading additional input from stdin...\nOpenAI Codex v0.125.0 (research preview)\n--------\nworkdir: /home/yuzheng/projects/openai-agents-python-skills\nmodel: gpt-5.5\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: none\nreasoning summaries: none\nsession id: 019df864-abc1-7071-b337-fe76d0b6a3dc\n--------\nuser\nYou are evaluating whether local Agent Skills help write OpenAI Agents SDK Python code.\n\nUse the installed/local skills conceptually if they are available, especially the OpenAI Agents Python skills.\nDo not edit files. Do not run tools. Output only the code or implementation guidance requested by the task.\nDo not say that you will inspect files, read skills, check the codebase, or use tools.\nIf the task asks for a code block, return the requested code block immediately.\n\nTask:\n# Live Task: Trace Guided Bugfix\n\nWrite a compact OpenAI Agents SDK Python debug helper for a session +\nstreaming bug.\n\nIt must include:\n\n- `request_id`\n- `trace(..., group_id=...)`\n- `Runner.run_streamed(...)`\n- `session=`\n- one final validated output check\n- one failure reproduction checklist\n- one secret-redaction note\n\nReturn exactly one valid Python code block.\nInclude the literal words `reproduce`, `secret`, `failure`, and `validate` in comments or string constants.\n\n\n2026-05-05T13:47:20.435397Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: Network unreachable (os error 101), url: wss://api.openai.com/v1/responses\n2026-05-05T13:47:20.463348Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: Network unreachable (os error 101), url: wss://api.openai.com/v1/responses\n2026-05-05T13:47:20.694549Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: Network unreachable (os error 101), url: wss://api.openai.com/v1/responses\nERROR: Reconnecting... 2/5\n2026-05-05T13:47:21.154485Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: Network unreachable (os error 101), url: wss://api.openai.com/v1/responses\nERROR: Reconnecting... 3/5\n2026-05-05T13:47:21.914245Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: Network unreachable (os error 101), url: wss://api.openai.com/v1/responses\nERROR: Reconnecting... 4/5\n2026-05-05T13:47:23.543421Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: Network unreachable (os error 101), url: wss://api.openai.com/v1/responses\nERROR: Reconnecting... 5/5\n2026-05-05T13:47:26.553960Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: IO error: Network unreachable (os error 101), url: wss://api.openai.com/v1/responses\nERROR: Reconnecting... 1/5\nERROR: Reconnecting... 2/5\nERROR: Reconnecting... 3/5\nERROR: Reconnecting... 4/5\nERROR: Reconnecting... 5/5\nERROR: stream disconnected before completion: error sending request for url (https://api.openai.com/v1/responses)\nERROR: stream disconnected before completion: error sending request for url (https://api.openai.com/v1/responses)",
+      "task": "trace_guided_bugfix",
+      "task_family": "workflow"
     }
   ]
 }

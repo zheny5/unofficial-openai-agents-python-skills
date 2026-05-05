@@ -11,3 +11,4 @@ timestamp	commit	total_score	hypothesis
 2026-05-04T14:58:42Z	0628a93	0.962	Add official-source-backed workflow skills; full live sweep code score 1.0 for all five tasks.
 2026-05-04T15:41:00Z	8a2058d	0.962	Add runtime eval that executes official Agent/Runner flows with FakeModel and passes 5/5 cases.
 2026-05-04T16:14:57Z	db70b32	0.967	Stabilize the three weak Claude live tasks by hardening typed/validate, safe provider credentials, and request-ID/session wording.
+2026-05-05T13:38:38Z	3e711b0	0.967	Expand runtime eval to 8/8 and add workflow live tasks; Claude workflow tasks pass, Codex harness is wired but blocked by current environment.

@@ -35,11 +35,23 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from agents import Agent, Runner, SQLiteSession, function_tool, set_tracing_disabled
+from agents import (
+    Agent,
+    GuardrailFunctionOutput,
+    InputGuardrailTripwireTriggered,
+    RunConfig,
+    Runner,
+    SQLiteSession,
+    function_tool,
+    handoff,
+    input_guardrail,
+    set_tracing_disabled,
+)
 from tests.fake_model import FakeModel
 from tests.test_responses import (
     get_final_output_message,
     get_function_tool_call,
+    get_handoff_tool_call,
     get_text_message,
 )
 
@@ -159,6 +171,59 @@ async def session_memory() -> dict[str, Any]:
     return ok("session", item_count=len(items), second_input_items=len(last_input))
 
 
+async def handoff_runtime() -> dict[str, Any]:
+    specialist_model = FakeModel()
+    specialist_model.set_next_output([get_text_message("billing specialist handled it")])
+    specialist = Agent(name="billing", model=specialist_model)
+
+    triage_model = FakeModel()
+    triage_model.set_next_output([get_handoff_tool_call(specialist)])
+    triage = Agent(name="triage", model=triage_model, handoffs=[specialist])
+
+    result = await Runner.run(triage, "I have a billing issue.")
+
+    assert result.final_output == "billing specialist handled it"
+    assert result.last_agent.name == "billing"
+    return ok("handoff", final_output=result.final_output, last_agent=result.last_agent.name)
+
+
+@input_guardrail
+def reject_forbidden(_ctx, _agent, user_input):
+    text = user_input if isinstance(user_input, str) else str(user_input)
+    return GuardrailFunctionOutput(
+        output_info="blocked forbidden input",
+        tripwire_triggered="forbidden" in text.lower(),
+    )
+
+
+async def guardrail_tripwire() -> dict[str, Any]:
+    model = FakeModel()
+    model.set_next_output([get_text_message("should not be reached")])
+    agent = Agent(name="guarded", model=model, input_guardrails=[reject_forbidden])
+
+    try:
+        await Runner.run(agent, "forbidden request")
+    except InputGuardrailTripwireTriggered as exc:
+        return ok("guardrail_tripwire", tripwire=str(exc))
+
+    raise AssertionError("guardrail did not trip")
+
+
+async def run_config_override() -> dict[str, Any]:
+    model = FakeModel()
+    model.set_next_output([get_text_message("from override")])
+    agent = Agent(name="override-agent", model="agent-model")
+
+    result = await Runner.run(
+        agent,
+        "Use override",
+        run_config=RunConfig(model=model),
+    )
+
+    assert result.final_output == "from override"
+    return ok("run_config_override", final_output=result.final_output)
+
+
 async def main() -> None:
     cases = [
         minimal_runner,
@@ -166,6 +231,9 @@ async def main() -> None:
         tool_call,
         streaming,
         session_memory,
+        handoff_runtime,
+        guardrail_tripwire,
+        run_config_override,
     ]
     results = []
     for case in cases:

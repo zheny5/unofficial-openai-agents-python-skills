@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import re
 import subprocess
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,6 +28,7 @@ class LiveTask:
     expected_terms: list[str]
     architecture_terms: list[str]
     banned_patterns: list[str]
+    task_family: str = "snippet"
 
 
 def load_config() -> dict[str, Any]:
@@ -45,6 +48,7 @@ def load_tasks(selected: str | None = None) -> list[LiveTask]:
                 expected_terms=raw["expected_terms"],
                 architecture_terms=raw["architecture_terms"],
                 banned_patterns=raw["banned_patterns"],
+                task_family=raw.get("task_family", "snippet"),
             )
         )
     if selected and not tasks:
@@ -79,6 +83,26 @@ def claude_command(prompt: str) -> list[str]:
         "--output-format",
         "json",
     ]
+
+
+def codex_command(prompt: str, output_path: str) -> tuple[list[str], dict[str, str]]:
+    codex_home = tempfile.mkdtemp(prefix="codex-home-", dir="/tmp")
+    env = os.environ.copy()
+    env["CODEX_HOME"] = codex_home
+    cmd = [
+        "codex",
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-s",
+        "read-only",
+        "-C",
+        str(ROOT),
+        "-o",
+        output_path,
+        prompt,
+    ]
+    return cmd, env
 
 
 def output_text(raw: str) -> str:
@@ -177,14 +201,31 @@ def score_output(task: LiveTask, text: str) -> dict[str, Any]:
 
 
 def run_task(task: LiveTask, dry_run: bool, timeout_seconds: int) -> dict[str, Any]:
+    raise NotImplementedError
+
+
+def run_task_with_agent(
+    task: LiveTask, agent: str, dry_run: bool, timeout_seconds: int
+) -> dict[str, Any]:
     prompt = build_prompt(task)
-    cmd = claude_command(prompt)
+    env: dict[str, str] | None = None
+    output_path: str | None = None
+    if agent == "claude":
+        cmd = claude_command(prompt)
+    elif agent == "codex":
+        handle = tempfile.NamedTemporaryFile("w", suffix="_codex_last.txt", delete=False)
+        handle.close()
+        output_path = handle.name
+        cmd, env = codex_command(prompt, output_path)
+    else:
+        raise SystemExit(f"unsupported agent: {agent}")
     if dry_run:
         return {
             "task": task.name,
             "dry_run": True,
-            "command": cmd[:1] + ["-p", "<prompt>", *cmd[3:]],
+            "command": [cmd[0], "<agent-invocation>"],
             "prompt_chars": len(prompt),
+            "task_family": task.task_family,
         }
 
     try:
@@ -194,6 +235,7 @@ def run_task(task: LiveTask, dry_run: bool, timeout_seconds: int) -> dict[str, A
             check=False,
             text=True,
             capture_output=True,
+            env=env,
             timeout=timeout_seconds,
         )
     except subprocess.TimeoutExpired as exc:
@@ -206,8 +248,17 @@ def run_task(task: LiveTask, dry_run: bool, timeout_seconds: int) -> dict[str, A
             "output": partial,
             "score": score_output(task, partial),
             "timed_out": True,
+            "task_family": task.task_family,
         }
-    text = output_text(completed.stdout)
+
+    if agent == "codex":
+        if output_path and Path(output_path).exists():
+            text = Path(output_path).read_text()
+            Path(output_path).unlink(missing_ok=True)
+        else:
+            text = completed.stdout
+    else:
+        text = output_text(completed.stdout)
     result = {
         "task": task.name,
         "dry_run": False,
@@ -215,6 +266,7 @@ def run_task(task: LiveTask, dry_run: bool, timeout_seconds: int) -> dict[str, A
         "stderr": completed.stderr.strip(),
         "output": text,
         "score": score_output(task, text),
+        "task_family": task.task_family,
     }
     return result
 
@@ -260,21 +312,26 @@ def render_markdown(report: dict[str, Any]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--agent", choices=["claude"], default="claude")
+    parser.add_argument("--agent", choices=["claude", "codex"], default="claude")
     parser.add_argument("--task")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--format", choices=["json", "markdown"], default="markdown")
     parser.add_argument("--write-results", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=300)
+    parser.add_argument("--repeat", type=int, default=1)
     args = parser.parse_args()
 
-    results = [
-        run_task(task, args.dry_run, args.timeout_seconds) for task in load_tasks(args.task)
-    ]
+    results = []
+    for _ in range(args.repeat):
+        results.extend(
+            run_task_with_agent(task, args.agent, args.dry_run, args.timeout_seconds)
+            for task in load_tasks(args.task)
+        )
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "agent": args.agent,
         "dry_run": args.dry_run,
+        "repeat": args.repeat,
         "results": results,
     }
 

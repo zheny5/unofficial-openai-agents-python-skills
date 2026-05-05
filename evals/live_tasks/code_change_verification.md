@@ -25,3 +25,5 @@ The Python code must include these literal command strings:
 Include comments or labels containing the literal phrases `fail fast`, `verification stack`, `smoke`, and `source map`.
 
 Keep the code parseable with `ast.parse`; prefer simple string literals.
+Include the literal phrase `static eval` in a comment or label, not only in the command string.
+Include the literal phrase `live eval` in a comment or label, not only in the command string.
